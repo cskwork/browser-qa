@@ -1,6 +1,6 @@
 ---
 name: superqa
-description: Browser QA for any website: turns a plain prompt into test scenarios, drives a real browser, and flags side effects (console/JS errors, failed requests, unexpected dialogs/popups/tabs) in plain-language reports. Keeps per-domain QA packs (feature map + archived reusable scripts) so repeat QA on a known domain needs no rediscovery. Also click-to-record, visual baselines, a clickable web admin, and CI/JUnit output. Use when the user says QA, browser test, regression check, record/schedule a scenario, names a known domain/feature to re-verify, or gives a URL to verify.
+description: Browser QA for any website. Use when the user says QA or browser test; gives a URL to verify; names a known domain or feature to re-QA; wants a regression sweep after a feature lands; asks for a quick smoke check; wants to record a test by clicking, schedule one, or open the QA dashboard; or needs QA against a local stack because the shared environment is down or the cases are destructive.
 ---
 
 # SuperQA - browser QA on anything, for anyone
