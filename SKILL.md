@@ -1,6 +1,6 @@
 ---
 name: superqa
-description: Browser QA for any website: turns a plain prompt into test scenarios, drives a real browser, and flags side effects (console/JS errors, failed requests, unexpected dialogs/popups/tabs) in plain-language reports. Also click-to-record, visual baselines, a clickable web admin, and CI/JUnit output. Use when the user says QA, browser test, regression check, record/schedule a scenario, or gives a URL to verify.
+description: Browser QA for any website: turns a plain prompt into test scenarios, drives a real browser, and flags side effects (console/JS errors, failed requests, unexpected dialogs/popups/tabs) in plain-language reports. Keeps per-domain QA packs (feature map + archived reusable scripts) so repeat QA on a known domain needs no rediscovery. Also click-to-record, visual baselines, a clickable web admin, and CI/JUnit output. Use when the user says QA, browser test, regression check, record/schedule a scenario, names a known domain/feature to re-verify, or gives a URL to verify.
 ---
 
 # SuperQA - browser QA on anything, for anyone
@@ -12,6 +12,7 @@ user's language. Never claim a check passed without a run directory + report to 
 
 | Signal in request | Mode | Route |
 |---|---|---|
+| known domain / "QA <domain> <feature>" / repeat QA on something QA'd before | DOMAIN-QA | load the domain pack, QA per feature area, reuse archived scripts (`reference/domain-packs.md`) |
 | "QA this <url>", vague target, no scenarios yet | EXPLORE-QA | explore live site, generate scenario cases, run them (`reference/agent-qa.md`) |
 | scenarios exist / "run the cases" / feature finished, verify | REGRESSION | `superqa run --all --site <site>`; diff vs last run (`reference/agent-qa.md` step 5) |
 | "quick check / smoke / is it up" | AUTO | `superqa auto <url> --site <site>` |
@@ -43,13 +44,22 @@ user's language. Never claim a check passed without a run directory + report to 
 7. **A local copy of shared data is read-only at the source, subsetted, redacted, and
    never committed.** Local config gets dummy secrets only - never a real shared-environment
    credential to make something boot (`reference/local-offline.md`).
+8. **Reusable QA scripts get archived, not abandoned.** Helper scripts (data discovery,
+   fixture pickers, probes, harnesses) that proved useful go into the domain pack under
+   `<packs_home>/<domain>/<feature>/scripts/` with a provenance header. Check the pack
+   BEFORE writing a new script. Pack location is asked once and stored in
+   `~/.superqa/config.yaml` (`reference/domain-packs.md`).
+9. **Exploration engine follows the cascade.** ego-browser (ego-lite) first on macOS,
+   then Playwright MCP, then `playwright-cli`, then any other installed driver.
+   Deterministic replay is always the superqa engine (`reference/engines.md`).
 
 ## EXPLORE-QA loop (default when only a URL/prompt is given)
 
 1. **Ground.** Read `~/.superqa/sites/<site>/rules.md` if present; ask for credentials
    only if login is required and vars are missing.
-2. **Explore.** Drive the live site with `playwright-cli` (snapshot -> click -> snapshot),
-   mapping entry flow, login, menus, popups/new tabs (`reference/agent-qa.md`).
+2. **Explore.** Drive the live site with the selected engine (snapshot -> click ->
+   snapshot; `reference/engines.md`), mapping entry flow, login, menus,
+   popups/new tabs (`reference/agent-qa.md`).
 3. **Generate cases.** Write scenario YAMLs to `~/.superqa/scenarios/<site>/` covering:
    happy path, validation, error paths, edge cases, and every popup/tab transition you
    found (`reference/scenario-gen.md`).
@@ -73,6 +83,8 @@ user's language. Never claim a check passed without a run directory + report to 
 
 | File | When |
 |---|---|
+| `reference/domain-packs.md` | DOMAIN-QA: per-domain/feature packs, script archiving, pack location config |
+| `reference/engines.md` | exploration engine cascade (ego-browser -> Playwright MCP -> playwright-cli -> other) |
 | `reference/agent-qa.md` | EXPLORE-QA / REGRESSION procedure for the agent |
 | `reference/scenario-gen.md` | prompt -> scenario case design method |
 | `reference/scenario-format.md` | YAML schema: actions, selectors, `{{vars}}`, policy |
@@ -84,4 +96,5 @@ user's language. Never claim a check passed without a run directory + report to 
 
 **Done =** mode stated; scenarios exist as YAML under `~/.superqa/scenarios/<site>/`;
 run executed with report path quoted; side effects triaged; site rules updated;
+domain pack updated (feature map + any new reusable script archived);
 no site-specific data staged for commit.

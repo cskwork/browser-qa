@@ -1,0 +1,50 @@
+# Browser engines - what drives the exploration
+
+Two layers, do not confuse them:
+
+- **Deterministic replay** of scenario YAMLs is always the SuperQA engine
+  (`python3 -m superqa_tui run ...`, Playwright underneath). Reports, side
+  effects, diffs come from here. Engines below do NOT replace it.
+- **Interactive exploration / ad-hoc driving** (EXPLORE-QA step 2, one-off
+  checks, archived driving scripts) uses the best available engine per the
+  cascade below.
+
+## Cascade (first available wins)
+
+| # | Engine | Detect | Use via |
+|---|---|---|---|
+| 1 | **ego-browser** (ego-lite) - macOS default | `command -v ego-browser` | the `ego-browser` skill if installed, else `ego-browser nodejs <<'EOF' ... EOF` heredocs |
+| 2 | Playwright MCP | playwright/browser MCP tools present in the session | its `browser_*` tools |
+| 3 | `playwright-cli` | `command -v playwright-cli` | commands in `reference/agent-qa.md` step 2 |
+| 4 | agentbrowser or any other installed driver | `command -v agentbrowser` | its own CLI |
+
+Record the working choice per machine so detection runs once:
+
+```yaml
+# ~/.superqa/config.yaml
+engine: ego-browser        # exploration engine; replay is always superqa
+```
+
+If the recorded engine stops working, fall through the cascade again and
+update the value.
+
+## Why ego-browser first on macOS
+
+Isolated agent task spaces that reuse the user's login state - authenticated
+exploration without stealing the user's browser, and without re-teaching
+logins that already exist. Prefer it whenever the target needs a real
+logged-in session. For anonymous public pages any engine is equivalent;
+don't churn engines mid-task.
+
+## Engine-agnostic exploration contract
+
+Whatever the engine, step 2 of EXPLORE-QA must produce the same artifacts:
+
+- entry flow + login steps recorded in `sites/<site>/rules.md`
+- menu -> URL map; which clicks open tabs/popups/dialogs
+- console errors and failed requests noted
+- screenshots for anything surprising
+
+Archived driving scripts (see `reference/domain-packs.md`) should state their
+engine in the provenance header (`# engine: ego-browser nodejs`), so the next
+run knows what it needs.

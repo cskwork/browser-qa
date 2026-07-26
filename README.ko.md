@@ -116,6 +116,21 @@ steps:
 알림창(alert/confirm/prompt)은 정책에 따라 자동 처리되고, 새 탭을 여는 클릭은
 자동으로 따라갑니다(`expect_popup: true`면 탭이 필수).
 
+## 도메인 QA 팩
+
+같은 제품을 반복 QA할 때마다 처음부터 다시 파악하지 않도록, **팩**
+(기본 `~/.superqa/packs/<domain>/`; 위치는 최초 1회 물어보고
+`~/.superqa/config.yaml` 에 기록)이 도메인의 기능 맵(`pack.md`), 기능별 노트,
+그리고 **재사용 QA 스크립트 보관소**를 유지합니다 — 티켓 폴더에서 사라질
+데이터 탐색 SQL, 프로브, 하네스가 여기 남습니다. "QA \<도메인\> \<기능\>" 이라고
+하면 팩을 읽고 이미 있는 것부터 실행하며, 빈 곳만 새로 탐색합니다.
+[reference/domain-packs.md](reference/domain-packs.md) 참조.
+
+탐색용 브라우저 엔진은 설치된 것 중 최선을 자동 선택합니다: macOS에서는
+ego-browser(ego-lite) 우선, 다음 Playwright MCP, `playwright-cli`, 기타 드라이버
+순서 ([reference/engines.md](reference/engines.md)). 결정적 재생과 리포트는
+항상 SuperQA 엔진이 담당합니다.
+
 ## 사이트 정보는 로컬에만
 
 사이트 고유 정보는 전부 `~/.superqa/` 아래에만 있고 이 저장소에는 절대 들어가지
@@ -124,8 +139,10 @@ steps:
 ```
 ~/.superqa/
 ├── superqa.db               # 계정/변수 (SQLite; 비밀 키는 리포트에서 마스킹)
+├── config.yaml              # 팩 위치 + 탐색 엔진 선택
 ├── scenarios/<site>/*.yaml  # 테스트 케이스
 ├── reports/                 # 실행 증적
+├── packs/<domain>/          # 기능 맵 + 재사용 QA 스크립트 보관소
 └── sites/<site>/rules.md    # 에이전트가 관리하는 사이트별 플레이북
 ```
 
