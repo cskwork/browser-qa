@@ -72,7 +72,18 @@ superqa vars set myshop password s3cret          # 리포트에서 자동 마스
 superqa run --all --site myshop --headless        # 종료 코드 0 = 전부 성공
 superqa auto https://myshop.example.com           # 설정 없는 스모크 QA
 superqa schedule add 로그인-정상 --every 30 && superqa schedule daemon
+
+# 같은 시나리오를 다른 대상으로 (로컬 스택, 스테이징) — 저장된 값은 그대로 둔다
+superqa run --all --site myshop --headless --var base_url=http://localhost:3000
 ```
+
+## 로컬 스택으로 실행하기
+
+`--var KEY=VALUE` 는 저장된 변수를 건드리지 않고 그 실행에서만 대상을 바꾼다. 하나의 시나리오
+세트로 공용 환경과 내 PC 위의 스택을 모두 검증할 수 있다. 공용 환경에서는 만들기 어려운 파괴적
+케이스나 "최초 사용자" 상태는 로컬 서비스 + 로컬 데이터 서브셋으로 다루는 편이 낫다. 절차는
+[`reference/local-offline.md`](reference/local-offline.md) 에 있다 — 로컬 DB에서 픽스처를
+도출하는 방법과, 그 케이스가 실제로 실패할 수 있음을 증명하는 방법까지 포함한다.
 
 ## 실행 결과물
 

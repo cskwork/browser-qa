@@ -108,10 +108,27 @@ def test_doctor_runs() -> None:
     print("PASS test_doctor_runs")
 
 
+def test_var_override_beats_store() -> None:
+    """--var lets one scenario set target local/stg/prod without rewriting stored vars."""
+    from superqa_tui.cli import _parse_var_overrides
+    store = Store()
+    store.set_var("ovr-site", "entry_url", "https://remote.example.com/entry")
+    assert store.substitute("ovr-site", "{{entry_url}}") == "https://remote.example.com/entry"
+
+    store.set_overrides(_parse_var_overrides(["entry_url=http://localhost:3000/entry"]))
+    assert store.substitute("ovr-site", "{{entry_url}}") == "http://localhost:3000/entry"
+
+    # values containing '=' survive intact; the stored value is never rewritten
+    assert _parse_var_overrides(["token=a=b=c"])["token"] == "a=b=c"
+    assert Store().get_var("ovr-site", "entry_url") == "https://remote.example.com/entry"
+    print("PASS test_var_override_beats_store")
+
+
 if __name__ == "__main__":
     test_compare_images_unit()
     test_visual_regression_flow()
     test_trace_saved_only_on_failure()
     test_junit_output()
     test_doctor_runs()
+    test_var_override_beats_store()
     print("ALL V0.3 FEATURE TESTS PASSED")

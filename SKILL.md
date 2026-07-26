@@ -18,6 +18,7 @@ user's language. Never claim a check passed without a run directory + report to 
 | non-dev wants to create a test by clicking | RECORD | `superqa record <url>` or TUI `n` key (`reference/tui.md`) |
 | "every N minutes / daily / automate" | SCHEDULE | `superqa schedule add <scenario> --every <min>` + daemon (`reference/tui.md`) |
 | "open the QA app / dashboard" | TUI | `bash scripts/superqa.sh` |
+| "test locally / without the dev server / offline", shared env down, destructive cases | LOCAL-OFFLINE | bring the stack up locally, run the same scenarios with `--var base_url=...` (`reference/local-offline.md`) |
 
 ## Hard rules
 
@@ -39,6 +40,9 @@ user's language. Never claim a check passed without a run directory + report to 
    ignoring findings by hand (`reference/side-effects.md`).
 6. **Popups and dialogs never block a run.** Engine policy auto-accepts dialogs and
    follows new tabs by default; scenario `policy:` overrides (`reference/scenario-format.md`).
+7. **A local copy of shared data is read-only at the source, subsetted, redacted, and
+   never committed.** Local config gets dummy secrets only - never a real shared-environment
+   credential to make something boot (`reference/local-offline.md`).
 
 ## EXPLORE-QA loop (default when only a URL/prompt is given)
 
@@ -76,6 +80,7 @@ user's language. Never claim a check passed without a run directory + report to 
 | `reference/site-rules.md` | local per-site knowledge protocol (never commit) |
 | `reference/report.md` | report structure + language rules |
 | `reference/tui.md` | TUI / record / schedule usage for humans |
+| `reference/local-offline.md` | LOCAL-OFFLINE: local stack + data subset, DB-derived fixtures, differential proof |
 
 **Done =** mode stated; scenarios exist as YAML under `~/.superqa/scenarios/<site>/`;
 run executed with report path quoted; side effects triaged; site rules updated;
