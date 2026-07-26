@@ -52,6 +52,9 @@ class Store:
         self._conn.executescript(_SCHEMA)
         self._migrate()
         self._conn.commit()
+        # run-scoped overrides (e.g. --var entry_url=...): win over every stored scope,
+        # never persisted - lets one scenario set run against local/stg/prod targets.
+        self._overrides: dict[str, str] = {}
 
     def _migrate(self) -> None:
         cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(runs)")}
@@ -73,7 +76,13 @@ class Store:
         )
         self._conn.commit()
 
+    def set_overrides(self, pairs: dict[str, str]) -> None:
+        """Run-scoped variable overrides; they beat both site and '*' scopes."""
+        self._overrides.update(pairs)
+
     def get_var(self, site: str, key: str) -> str | None:
+        if key in self._overrides:
+            return self._overrides[key]
         for scope in (site, "*"):
             row = self._conn.execute(
                 "SELECT value FROM vars WHERE site=? AND key=?", (scope, key)

@@ -87,8 +87,19 @@ def _maybe_junit(args, results: list[RunResult]) -> None:
         print(f"JUnit XML: {path}")
 
 
+def _parse_var_overrides(raw: list[str] | None) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for item in raw or []:
+        if "=" not in item:
+            raise SystemExit(f"--var 는 KEY=VALUE 형식이어야 합니다: {item}")
+        key, value = item.split("=", 1)
+        out[key.strip()] = value
+    return out
+
+
 def cmd_run(args) -> int:
     store = Store()
+    store.set_overrides(_parse_var_overrides(getattr(args, "var", None)))
     headed = not args.headless
     for path, err in broken_scenarios():
         print(f"[경고] 읽을 수 없는 시나리오(건너뜀): {path} - {err}")
@@ -301,6 +312,10 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--site", default="", help="사이트 필터")
     r.add_argument("--headless", action="store_true", help="브라우저 창 없이 실행")
     r.add_argument("--junit", default=None, metavar="PATH", help="JUnit XML 저장(CI용)")
+    r.add_argument(
+        "--var", action="append", metavar="KEY=VALUE",
+        help="변수 임시 덮어쓰기(저장 안 됨). 예: --var base_url=http://localhost:3000",
+    )
     r.set_defaults(func=cmd_run)
 
     b = sub.add_parser("baseline", help="최근 실행 스크린샷을 화면 기준선으로 저장")

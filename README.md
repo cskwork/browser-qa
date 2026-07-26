@@ -74,7 +74,19 @@ superqa vars set myshop password s3cret          # auto-masked in reports
 superqa run --all --site myshop --headless        # exit code 0 = green
 superqa auto https://myshop.example.com           # smoke QA, zero setup
 superqa schedule add 로그인-정상 --every 30 && superqa schedule daemon
+
+# same cases against another target (local stack, staging) - nothing is persisted
+superqa run --all --site myshop --headless --var base_url=http://localhost:3000
 ```
+
+## Running against a local stack
+
+`--var KEY=VALUE` retargets a run without rewriting the stored variables, so one scenario
+set covers shared environments and a copy of the stack running on your machine. Testing
+against local services and a local data subset is the way to cover destructive cases and
+first-time-user states that shared environments cannot hold -
+[`reference/local-offline.md`](reference/local-offline.md) has the procedure, including how
+to derive fixtures from the local database and how to prove a case can actually fail.
 
 ## What a run produces
 
