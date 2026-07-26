@@ -2,8 +2,10 @@
 
 The agent has two tools that must not be confused:
 
-- **`playwright-cli`** - interactive exploration. Token-efficient snapshots, refs, one
-  action per command. Use it to LEARN the site.
+- **Exploration engine** (cascade in `reference/engines.md`: ego-browser first on
+  macOS, then Playwright MCP, then `playwright-cli`, then other drivers) -
+  interactive driving. Use it to LEARN the site. The `playwright-cli` commands
+  below are the reference example; other engines produce the same artifacts.
 - **`superqa` engine** (`python3 -m superqa_tui ...` from the skill root) - deterministic
   replay of scenario YAMLs with side-effect capture and reports. Use it to PROVE the site.
 
@@ -22,7 +24,10 @@ python3 -m superqa_tui doctor      # one command checks everything, prints fixes
 - `python3 -m superqa_tui vars list <site>` - if login is needed and username/password
   are missing, ask the user once and store with `vars set`. Never echo the password.
 
-## 2. Explore with playwright-cli
+## 2. Explore with the selected engine
+
+`playwright-cli` example (ego-browser: same loop with `snapshotText`/`click`
+heredocs; Playwright MCP: same loop with `browser_*` tools):
 
 ```bash
 playwright-cli open <url>

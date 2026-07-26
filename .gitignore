@@ -16,9 +16,10 @@ build/
 reports/
 *.db
 
-# local site rules or scenarios accidentally created in-repo
+# local site rules, scenarios, or domain packs accidentally created in-repo
 sites/
 scenarios/
+packs/
 rules/site*.md
 
 # claude local

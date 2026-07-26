@@ -48,3 +48,44 @@ in the reference), never in this repo.
 
 `playwright-cli` remains the portable exploration tool; on macOS `ego-browser` (ego-lite)
 is a good alternative, reusing existing logged-in browser state in an isolated agent space.
+
+---
+
+# v0.4.0 - Domain QA packs + exploration engine cascade (same day, second drop)
+
+Repeat QA on a known product kept starting from zero, and the helper scripts it produced
+(data-discovery SQL, probes, harnesses) kept dying in ticket folders. Both problems get
+one structure: the **domain QA pack**.
+
+## Domain QA packs (`reference/domain-packs.md`, DOMAIN-QA mode)
+
+- A pack (`<packs_home>/<domain>/`) holds the domain's feature map (`pack.md`),
+  per-feature notes, and archived reusable scripts. "QA <domain> <feature>" loads the
+  pack, runs what exists, explores only gaps.
+- Pack location is asked ONCE and recorded in `~/.superqa/config.yaml` (`packs_home`);
+  project-local locations must be gitignored (verified, not assumed).
+- Script archiving rule (hard rule 8): check the pack before writing a script; archive
+  proven scripts with a provenance header (`# pack: / origin: / needs: / engine:`);
+  parameterize paths on archive; scripts already committed somewhere durable are
+  referenced, not copied.
+- One source & portability: packs absorb per-domain skills/harnesses (old home keeps a
+  DEPRECATED stub only); no user-absolute paths (`${ROOT:-$HOME/...}`); files ARE the
+  database - no SQLite/binary index for the script library, generate `INDEX.md` from
+  headers if grep ever stops being enough; `packs_home` can be a private git repo for
+  cross-machine durability.
+- stack.md / troubleshooting.md doc shapes documented: measured-facts-only bring-up
+  (external config injection, snapshot-before-QA) and an append-only
+  symptom -> cause -> fix log.
+
+## Exploration engine cascade (`reference/engines.md`, hard rule 9)
+
+- Interactive exploration picks the first available engine: **ego-browser (ego-lite)**
+  on macOS -> Playwright MCP -> `playwright-cli` -> any other installed driver. Choice
+  recorded in `config.yaml`. Deterministic replay and reports stay with the superqa
+  engine - the cascade never replaces it.
+- `agent-qa.md` exploration step generalized; `playwright-cli` commands remain as the
+  reference example of the loop every engine must reproduce (rules.md updates, tab/popup
+  map, console + request evidence).
+
+No engine-code changes; this is a skill-layer release. `.gitignore` now also blocks
+`packs/` from ever landing in-repo.

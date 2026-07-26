@@ -119,6 +119,21 @@ steps:
 Dialogs (alert/confirm/prompt) are auto-handled by policy; clicks that open new tabs
 are followed automatically (`expect_popup: true` makes the tab mandatory).
 
+## Domain QA packs
+
+Repeat QA on the same product should not start from zero. A **pack**
+(`~/.superqa/packs/<domain>/` by default; location is asked once and stored in
+`~/.superqa/config.yaml`) keeps the domain's feature map (`pack.md`), per-feature
+notes, and **archived reusable scripts** - the data-discovery SQL, probes, and
+harnesses that would otherwise die in ticket folders. Saying "QA \<domain\>
+\<feature\>" loads the pack and runs what already exists; only gaps get explored.
+See [reference/domain-packs.md](reference/domain-packs.md).
+
+Interactive exploration picks the best installed engine automatically:
+ego-browser (ego-lite) first on macOS, then Playwright MCP, then `playwright-cli`,
+then other drivers ([reference/engines.md](reference/engines.md)). Deterministic
+replay and reports always come from the SuperQA engine.
+
 ## Site data stays local
 
 Everything site-specific lives under `~/.superqa/` - never in this repo:
@@ -126,8 +141,10 @@ Everything site-specific lives under `~/.superqa/` - never in this repo:
 ```
 ~/.superqa/
 ├── superqa.db               # accounts/vars (SQLite; secret keys masked in reports)
+├── config.yaml              # pack home + exploration engine choice
 ├── scenarios/<site>/*.yaml  # your test cases
 ├── reports/                 # run evidence
+├── packs/<domain>/          # feature map + archived reusable QA scripts
 └── sites/<site>/rules.md    # per-site playbook the agent maintains
 ```
 
