@@ -1,4 +1,4 @@
 # superqa
 
-@./SKILL.md
+@./skills/superqa/SKILL.md
 
