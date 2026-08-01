@@ -15,7 +15,7 @@
     "claude-code",
     "codex"
   ],
-  "skills": "./",
+  "skills": "./skills/",
   "interface": {
     "displayName": "Superqa",
     "shortDescription": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user",
