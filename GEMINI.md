@@ -1,0 +1,4 @@
+# superqa
+
+@./SKILL.md
+

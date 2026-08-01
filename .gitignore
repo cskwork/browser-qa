@@ -1,26 +1,6 @@
-# python
-__pycache__/
-*.pyc
-.pytest_cache/
-.venv/
-venv/
-*.egg-info/
-dist/
-build/
-
-# os
 .DS_Store
-
-# SuperQA user data - site-specific knowledge NEVER enters this repo
-.superqa/
-reports/
-*.db
-
-# local site rules, scenarios, or domain packs accidentally created in-repo
-sites/
-scenarios/
-packs/
-rules/site*.md
-
-# claude local
-.claude/settings.local.json
+__pycache__/
+*.py[cod]
+evals/results/
+node_modules/
+dist/
