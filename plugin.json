@@ -1,4 +1,4 @@
 {
   "name": "superqa",
-  "description": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user says QA or browser test; gives a URL to verify; names a known domain or feature to re-QA; wants a regression sweep after a feature lands; asks for a quick smoke check; wants to record a test by clicking, schedule one, or open the QA dashboard; or needs QA against a local stack because the shared environment is down or the cases are destructive."
+  "description": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user says QA or browser test; gives a URL..."
 }
