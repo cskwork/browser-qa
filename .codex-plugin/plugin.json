@@ -6,8 +6,8 @@
     "name": "cskwork",
     "url": "https://github.com/cskwork"
   },
-  "homepage": "https://github.com/cskwork/superqa",
-  "repository": "https://github.com/cskwork/superqa",
+  "homepage": "https://github.com/cskwork/superqa-skill",
+  "repository": "https://github.com/cskwork/superqa-skill",
   "license": "MIT",
   "keywords": [
     "superqa",
@@ -25,7 +25,7 @@
     "capabilities": [
       "Instructions"
     ],
-    "websiteURL": "https://github.com/cskwork/superqa",
+    "websiteURL": "https://github.com/cskwork/superqa-skill",
     "defaultPrompt": [
       "Use superqa for this task."
     ],

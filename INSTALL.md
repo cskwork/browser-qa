@@ -6,7 +6,7 @@
 ### Install
 
 ```bash
-claude plugin marketplace add cskwork/superqa
+claude plugin marketplace add cskwork/superqa-skill
 claude plugin install superqa@superqa
 ```
 
@@ -39,7 +39,7 @@ claude plugin marketplace remove superqa
 ### Install
 
 ```bash
-codex plugin marketplace add cskwork/superqa --ref main
+codex plugin marketplace add cskwork/superqa-skill --ref main
 codex plugin add superqa@superqa
 ```
 
@@ -66,14 +66,14 @@ codex plugin marketplace remove superqa
 ### Install (extension, always-on)
 
 ```bash
-gemini extensions install https://github.com/cskwork/superqa
+gemini extensions install https://github.com/cskwork/superqa-skill
 ```
 
 ### Install (command, opt-in)
 
 ```bash
 mkdir -p ~/.gemini/commands
-curl -fsSL https://raw.githubusercontent.com/cskwork/superqa/main/skills/superqa/agents/gemini.toml \
+curl -fsSL https://raw.githubusercontent.com/cskwork/superqa-skill/main/skills/superqa-skill/agents/gemini.toml \
   -o ~/.gemini/commands/superqa.toml
 ```
 
@@ -99,8 +99,8 @@ gemini extensions uninstall superqa
 ### Install
 
 ```bash
-npx skills add cskwork/superqa
-npx skills add cskwork/superqa -g
+npx skills add cskwork/superqa-skill
+npx skills add cskwork/superqa-skill -g
 ```
 
 Type `/superqa` in a new agent chat.
@@ -131,7 +131,7 @@ npx skills remove superqa
 ### Install
 
 ```bash
-agy plugin install https://github.com/cskwork/superqa
+agy plugin install https://github.com/cskwork/superqa-skill
 ```
 
 ### Verify
