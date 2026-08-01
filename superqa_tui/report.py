@@ -34,6 +34,14 @@ def _mask_all(text: str, secrets: list[str]) -> str:
     return text
 
 
+def _markdown_cell(value: object, secrets: list[str], *, code: bool = False) -> str:
+    """Keep human-authored DAG labels inside one safe Markdown table cell."""
+    text = html.escape(_mask_all(str(value), secrets))
+    text = text.replace("\\", "\\\\").replace("|", "\\|")
+    text = text.replace("\r", "").replace("\n", " ")
+    return text.replace("`", "\\`") if code else text
+
+
 def _fmt_duration(result: RunResult) -> str:
     sec = max(0.0, (result.finished_at or time.time()) - result.started_at)
     return f"{sec:.1f}s"
@@ -80,18 +88,19 @@ def _render_md(r: RunResult, lang: str, secrets: list[str],
     lines += [
         f"## {t('steps_summary', lang)}",
         "",
-        f"| # | {t('step', lang)} | {t('result', lang)} | {t('screenshot', lang)} |",
-        "|---|---|---|---|",
+        f"| # | DAG | {'사용자 스토리' if lang == 'ko' else 'User story'} | {t('result', lang)} | {t('screenshot', lang)} |",
+        "|---|---|---|---|---|",
     ]
     for sr in r.step_results:
-        desc = sr.step.description or f"{sr.step.action} {sr.step.url or sr.step.selector or ''}"
-        desc = _mask_all(str(desc), secrets)
+        desc = sr.node_story or sr.step.description or "QA runtime step"
+        desc = _markdown_cell(desc, secrets)
         status = _status_word("pass" if sr.status == "pass" else "fail", lang)
         if sr.status == "skipped":
             status = "-"
-        err = f" ({_mask_all(sr.error, secrets)})" if sr.error else ""
+        err = f" ({_markdown_cell(sr.error, secrets)})" if sr.error else ""
         shot = f"[{sr.screenshot}]({sr.screenshot})" if sr.screenshot else "-"
-        lines.append(f"| {sr.index + 1} | {desc} | {status}{err} | {shot} |")
+        node_id = _markdown_cell(sr.node_id, secrets, code=True) if sr.node_id else "-"
+        lines.append(f"| {sr.index + 1} | `{node_id}` | {desc} | {status}{err} | {shot} |")
     def effect_rows(effects) -> list[str]:
         rows = [f"| {t('step', lang)} | 종류 | 심각도 | {t('effect_count', lang)} | 내용 |"
                 if lang == "ko"
@@ -138,6 +147,7 @@ h2{font-size:18px;margin:28px 0 6px}
 .sev-error{color:#b91c1c;font-weight:600}.sev-warning{color:#b45309}.sev-info{color:#475569}
 .empty{color:#16a34a;background:#f0fdf4;padding:12px 16px;border-radius:10px;font-size:14px}
 .msg{word-break:break-all;font-size:13px}
+.node-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#475569}
 .muted{color:#64748b;font-size:15px;margin-top:20px}
 .diff{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px 14px 34px;
   font-size:14px;margin:8px 0 4px}
@@ -152,7 +162,7 @@ def _render_html(r: RunResult, lang: str, secrets: list[str],
     badge = "pass" if r.status == "pass" else "fail"
     rows = []
     for sr in r.step_results:
-        desc = sr.step.description or f"{sr.step.action} {sr.step.url or sr.step.selector or ''}"
+        desc = sr.node_story or sr.step.description or "QA runtime step"
         status = _status_word("pass" if sr.status == "pass" else "fail", lang)
         if sr.status == "skipped":
             status = "-"
@@ -160,7 +170,9 @@ def _render_html(r: RunResult, lang: str, secrets: list[str],
         shot = (f"<a href='{esc(sr.screenshot)}' target='_blank'>"
                 f"<img src='{esc(sr.screenshot)}' loading='lazy'></a>") if sr.screenshot else "-"
         cls = "pass" if sr.status == "pass" else ("" if sr.status == "skipped" else "fail")
-        rows.append(f"<tr><td>{sr.index + 1}</td><td>{esc(desc)}{err}</td>"
+        node_id = esc(sr.node_id) if sr.node_id else "-"
+        rows.append(f"<tr><td>{sr.index + 1}</td><td class='node-id'>{node_id}</td>"
+                    f"<td>{esc(desc)}{err}</td>"
                     f"<td><span class='badge {cls}'>{esc(status)}</span></td><td>{shot}</td></tr>")
     def effect_table(effects) -> str:
         eff_rows = []
@@ -205,8 +217,8 @@ def _render_html(r: RunResult, lang: str, secrets: list[str],
 {esc(t('effects_line', lang, count=len(r.visible_effects)))}</p>
 {diff_html}
 <h2>{esc(t('steps_summary', lang))}</h2>
-<table><tr><th>#</th><th>{esc(t('step', lang))}</th><th>{esc(t('result', lang))}</th>
-<th>{esc(t('screenshot', lang))}</th></tr>{''.join(rows)}</table>
+<table><tr><th>#</th><th>DAG</th><th>{'사용자 스토리' if lang == 'ko' else 'User story'}</th>
+<th>{esc(t('result', lang))}</th><th>{esc(t('screenshot', lang))}</th></tr>{''.join(rows)}</table>
 <h2>{esc(t('side_effects', lang))}</h2>
 {effects_html}
 </div></body></html>"""

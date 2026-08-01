@@ -79,7 +79,7 @@ class RunManager:
             elif kind == "step_end":
                 self._append_step(token, {
                     "index": ev["index"], "status": ev["status"],
-                    "error": ev.get("error", "")})
+                    "node_id": ev.get("node_id", ""), "error": ev.get("error", "")})
             elif kind == "effect" and ev.get("severity") in ("error", "warning"):
                 with self._lock:
                     if token in self._runs:
@@ -162,8 +162,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def _state(self) -> dict:
         scenarios = [
-            {"name": s.name, "site": s.site, "steps": len(s.steps),
-             "tags": s.tags, "base_url": s.base_url}
+            {"name": s.name, "site": s.site, "steps": len(s.nodes),
+             "tags": s.tags, "base_url": s.base_url, "dag": s.dag_data()}
             for s in list_scenarios()
         ]
         store = Store()
@@ -272,11 +272,17 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .viewer-wrap.on{display:block}
 .hint{color:var(--muted);font-size:12px;margin-top:4px}
 .head-actions{display:flex;gap:8px;align-items:center}
+.dag-review{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.dag-review summary{cursor:pointer;color:#a7f3d0;font-size:12px;font-weight:700}
+.dag-canvas{overflow-x:auto;margin-top:8px;padding:8px;background:#0e1930;border-radius:8px}
+.dag-svg{display:block;min-width:100%}.dag-edge{stroke:#64748b;stroke-width:1.6;fill:none}
+.dag-node rect{fill:#1e3a5f;stroke:#5eead4;stroke-width:1.2}.dag-node text{fill:#e6edf7;font-size:10px}
+.dag-node .story{fill:#d1fae5;font-size:9px}.dag-node .acceptance{fill:#9fb0c7;font-size:8px}.dag-empty{color:var(--muted);font-size:12px}
 </style></head>
 <body>
 <header>
   <div><h1>Super<span>QA</span> Admin</h1>
-    <div class="sub">녹화 시나리오와 자동 생성 시나리오를 클릭으로 실행 · TUI와 동일한 데이터</div></div>
+    <div class="sub">사용자 스토리 DAG를 먼저 검토하고 클릭으로 실행 · TUI와 동일한 데이터</div></div>
   <div class="head-actions">
     <label class="sub"><input type="checkbox" id="headless" checked> headless(창 없이)</label>
     <button onclick="load()">새로고침</button>
@@ -303,6 +309,7 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 </div>
 <script>
 let polling = false;
+let dagMarkerCounter = 0;
 async function api(path, opts){ const r = await fetch(path, opts); return r.json(); }
 
 async function run(name, ev){
@@ -319,24 +326,82 @@ function badge(status){
   return `<span class="badge ${map[status]||''}">${label}</span>`;
 }
 
+function short(text, max=22){
+  const value=String(text||'');
+  return value.length>max ? value.slice(0,max-1)+'…' : value;
+}
+
+function dagView(dag){
+  const nodes=Array.isArray(dag&&dag.nodes) ? dag.nodes : [];
+  if(!nodes.length) return '<div class="dag-empty">검토할 사용자 스토리가 없습니다.</div>';
+  // The API only sends IDs, user stories, acceptance criteria, and dependencies. The server has already
+  // checked acyclicity, so YAML declaration order is a stable topology tie-breaker.
+  const level=new Map();
+  nodes.forEach(node=>{
+    const deps=Array.isArray(node.depends_on) ? node.depends_on : [];
+    const parentLevels=deps.map(id=>level.get(id)).filter(Number.isFinite);
+    level.set(node.id,parentLevels.length ? Math.max(...parentLevels)+1 : 0);
+  });
+  const columns=[];
+  nodes.forEach(node=>{
+    const col=level.get(node.id)||0;
+    (columns[col]=columns[col]||[]).push(node);
+  });
+  const nodeW=224,nodeH=72,gapX=72,gapY=16,margin=18;
+  const markerId=`arrow-${dagMarkerCounter++}`;
+  const maxColumn=Math.max(...[...level.values()]);
+  const maxRows=Math.max(...columns.map(col=>col.length));
+  const width=margin*2+(maxColumn+1)*nodeW+maxColumn*gapX;
+  const height=margin*2+maxRows*nodeH+Math.max(0,maxRows-1)*gapY;
+  const pos=new Map();
+  columns.forEach((column,col)=>column.forEach((node,row)=>{
+    pos.set(node.id,{x:margin+col*(nodeW+gapX),y:margin+row*(nodeH+gapY)});
+  }));
+  const edges=[];
+  nodes.forEach(node=>(node.depends_on||[]).forEach(from=>{
+    const a=pos.get(from),b=pos.get(node.id);
+    if(!a||!b) return;
+    const x1=a.x+nodeW,y1=a.y+nodeH/2,x2=b.x,y2=b.y+nodeH/2,mid=(x1+x2)/2;
+    edges.push(`<path class="dag-edge" marker-end="url(#${markerId})" d="M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}"/>`);
+  }));
+  const shapes=nodes.map(node=>{
+    const p=pos.get(node.id);
+    const acceptance=Array.isArray(node.acceptance) && node.acceptance.length ? node.acceptance[0] : '';
+    return `<g class="dag-node" transform="translate(${p.x} ${p.y})"><title>${esc(node.id)}</title>
+      <rect width="${nodeW}" height="${nodeH}" rx="7"/><text x="9" y="18">${esc(short(node.id,30))}</text>
+      <text class="story" x="9" y="38">${esc(short(node.story,34))}</text>
+      <text class="acceptance" x="9" y="56">${esc(short(acceptance,36))}</text></g>`;
+  }).join('');
+  const storage=dag&&dag.format==='steps' ? '기존 steps(읽기 전용)' : '사용자 스토리 YAML DAG';
+  const edgeCount=Array.isArray(dag&&dag.edges) ? dag.edges.length : edges.length;
+  return `<details class="dag-review" open><summary>사용자 스토리 DAG 검토 · ${nodes.length}개 스토리 · ${edgeCount}개 의존성 · ${storage}</summary>
+    <div class="dag-canvas"><svg class="dag-svg" role="img" aria-label="사용자 스토리 의존성 DAG" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+    <defs><marker id="${markerId}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#64748b"/></marker></defs>
+    ${edges.join('')}${shapes}</svg></div></details>`;
+}
+
 function renderScenarios(scenarios){
   const el = document.getElementById('scenarios');
   if(!scenarios.length){ el.innerHTML='<div class="empty">시나리오가 없습니다. TUI에서 n(기록) 또는 에이전트로 생성하세요.</div>'; return; }
+  dagMarkerCounter=0;
   const bySite={};
   scenarios.forEach(s=>{ (bySite[s.site]=bySite[s.site]||[]).push(s); });
   let html='';
   Object.keys(bySite).sort().forEach(site=>{
-    html+=`<div class="site">${site}</div>`;
+    html+=`<div class="site">${esc(site)}</div>`;
     bySite[site].forEach(s=>{
+      const tags=Array.isArray(s.tags)&&s.tags.length ? '· '+s.tags.map(esc).join(', ') : '';
       html+=`<div class="card"><div class="row">
         <div><div class="name">${esc(s.name)}</div>
-        <div class="meta">${s.steps}단계 ${s.tags.length?'· '+s.tags.join(','):''}</div></div>
-        <div class="btns">
-          <button class="run" onclick='run(${JSON.stringify(s.name)}, event)'>실행</button>
-        </div></div></div>`;
+        <div class="meta">${Number(s.steps)||0}개 사용자 스토리 ${tags}</div></div>
+        <div class="btns"><button class="run" data-scenario="${esc(s.name)}">실행</button></div>
+        </div>${dagView(s.dag)}</div>`;
     });
   });
   el.innerHTML=html;
+  el.querySelectorAll('button.run').forEach(button=>{
+    button.addEventListener('click',event=>run(button.dataset.scenario||'',event));
+  });
 }
 
 function renderBroken(broken){

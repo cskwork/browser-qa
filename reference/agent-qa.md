@@ -44,11 +44,23 @@ playwright-cli close
 Record in the site rules file as you go: entry flow, login steps, which clicks open
 new tabs/popups, dialogs that appear, menu -> URL map, unstable selectors.
 
-## 3. Generate scenario cases
+## 3. Generate and review user-story cases
 
-Follow `reference/scenario-gen.md`. Write YAML files (schema:
-`reference/scenario-format.md`) into `~/.superqa/scenarios/<site>/`. Descriptions in the
-user's language - a non-developer must understand every step.
+Follow `reference/scenario-gen.md`. Write `dag.nodes` YAML files (schema:
+`reference/scenario-format.md`) into `~/.superqa/scenarios/<site>/`. Each node is a
+user story plus user-visible acceptance criteria, not a click, selector, or browser
+command. A non-developer must be able to understand the whole graph without knowing the
+UI implementation. Validate and visually review that story structure before replay:
+
+```bash
+python3 -m superqa_tui dag check --all --site <site>
+python3 -m superqa_tui serve            # inspect the local Admin DAG cards
+```
+
+Only after the graph is agreed, use the recorder or exploration evidence to create the
+local runtime binding under `~/.superqa/runtimes/<site>/`. Do not put selector/action/
+value details back into the reviewed scenario YAML. A missing binding should stay a
+clear replay blocker, not be guessed from the story.
 
 ## 4. Run deterministically
 

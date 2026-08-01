@@ -67,6 +67,8 @@ class StepResult:
     index: int
     step: Step
     status: str            # pass|fail|skipped
+    node_id: str = ""       # DAG identity; index remains report/baseline compatible
+    node_story: str = ""    # human-readable user story; browser mechanics stay local
     error: str = ""
     screenshot: str = ""   # relative path inside run dir
     duration_ms: int = 0
@@ -101,8 +103,10 @@ class RunResult:
             "passed": self.passed,
             "failed": self.failed,
             "failed_steps": [
-                (r.step.description or r.step.action)
+                (r.node_story or r.step.description or r.step.action)
                 for r in self.step_results if r.status == "fail"],
+            "failed_node_ids": [r.node_id for r in self.step_results
+                                if r.status == "fail" and r.node_id],
             "effect_digests": sorted({e.digest() for e in self.visible_effects}),
         }
 
@@ -246,6 +250,23 @@ class Engine:
         run_dir.mkdir(parents=True, exist_ok=True)
         result.run_dir = run_dir
 
+        missing_runtime = sc.missing_runtime_nodes()
+        if missing_runtime:
+            node = missing_runtime[0]
+            result.step_results.append(StepResult(
+                index=next(index for index, candidate in enumerate(sc.execution_nodes())
+                           if candidate.id == node.id),
+                step=Step(action="wait", description=node.story),
+                status="fail",
+                node_id=node.id,
+                node_story=node.story,
+                error=("local runtime binding missing; record or wire this node in "
+                       "~/.superqa/runtimes before replay"),
+            ))
+            result.finished_at = time.time()
+            result.status = "error"
+            return result
+
         ignore = sc.policy.ignore_effects + site_ignore_patterns(sc.site)
         async with async_playwright() as pw:
             browser = await pw.chromium.launch(headless=not self.headed, slow_mo=self.slow_mo)
@@ -289,32 +310,37 @@ class Engine:
     async def _run_steps(self, sc: Scenario, page: Page, context: BrowserContext,
                          collector: EffectCollector, result: RunResult, run_dir: Path) -> None:
         active = page
-        for i, step in enumerate(sc.steps):
-            collector.current_step = i
-            self._emit("step_start", index=i, action=step.action,
-                       description=step.description)
-            t0 = time.monotonic()
-            sr = StepResult(index=i, step=step, status="pass")
-            try:
-                for attempt in range(step.retry + 1):
-                    try:
-                        active = await self._exec_step(sc, step, active, context)
-                        break
-                    except Exception:
-                        if attempt >= step.retry:
-                            raise
-                        self._emit("step_retry", index=i, attempt=attempt + 1)
-                        await asyncio.sleep(1.0)
-                await self._shot(active, run_dir, i, sr)
-            except Exception as e:
-                sr.status = "skipped" if step.optional else "fail"
-                sr.error = _mask(str(e), self.store.secret_values())[:400]
-                await self._shot(active, run_dir, i, sr)
-            sr.duration_ms = int((time.monotonic() - t0) * 1000)
-            result.step_results.append(sr)
-            self._emit("step_end", index=i, status=sr.status, error=sr.error)
-            if sr.status == "fail":
-                break
+        index = 0
+        for node in sc.execution_nodes():
+            for step in node.steps:
+                collector.current_step = index
+                self._emit("step_start", index=index, action=step.action,
+                           node_id=node.id, description=node.story)
+                t0 = time.monotonic()
+                sr = StepResult(index=index, step=step, status="pass", node_id=node.id,
+                                node_story=node.story)
+                try:
+                    for attempt in range(step.retry + 1):
+                        try:
+                            active = await self._exec_step(sc, step, active, context)
+                            break
+                        except Exception:
+                            if attempt >= step.retry:
+                                raise
+                            self._emit("step_retry", index=index, attempt=attempt + 1)
+                            await asyncio.sleep(1.0)
+                    await self._shot(active, run_dir, index, sr)
+                except Exception as e:
+                    sr.status = "skipped" if step.optional else "fail"
+                    sr.error = _mask(str(e), self.store.secret_values())[:400]
+                    await self._shot(active, run_dir, index, sr)
+                sr.duration_ms = int((time.monotonic() - t0) * 1000)
+                result.step_results.append(sr)
+                self._emit("step_end", index=index, node_id=node.id,
+                           status=sr.status, error=sr.error)
+                index += 1
+                if sr.status == "fail":
+                    return
 
     async def _exec_step(self, sc: Scenario, step: Step, page: Page,
                          context: BrowserContext) -> Page:
@@ -482,8 +508,11 @@ class Engine:
     async def _smoke_pass(self, sc: Scenario, page: Page, url: str, max_links: int,
                           collector: EffectCollector, result: RunResult, run_dir: Path) -> None:
         collector.current_step = 0
-        self._emit("step_start", index=0, action="goto", description=url)
-        sr = StepResult(index=0, step=sc.steps[0], status="pass")
+        first_node = sc.execution_nodes()[0]
+        self._emit("step_start", index=0, node_id=first_node.id,
+                   action="goto", description=first_node.story)
+        sr = StepResult(index=0, step=first_node.steps[0], status="pass",
+                        node_id=first_node.id, node_story=first_node.story)
         try:
             await page.goto(url, timeout=45000, wait_until="domcontentloaded")
             await asyncio.sleep(2.0)
@@ -491,7 +520,8 @@ class Engine:
         except Exception as e:
             sr.status, sr.error = "fail", str(e)[:400]
         result.step_results.append(sr)
-        self._emit("step_end", index=0, status=sr.status, error=sr.error)
+        self._emit("step_end", index=0, node_id=first_node.id,
+                   status=sr.status, error=sr.error)
         if sr.status == "fail":
             return
         origin = urlparse(page.url).netloc
@@ -507,9 +537,11 @@ class Engine:
         for j, link in enumerate(targets, start=1):
             collector.current_step = j
             step = Step(action="goto", url=link, description=f"링크 점검: {link}")
-            sc.steps.append(step)
-            self._emit("step_start", index=j, action="goto", description=link)
-            sr = StepResult(index=j, step=step, status="pass")
+            node = sc.append_step(step)
+            self._emit("step_start", index=j, node_id=node.id,
+                       action="goto", description=node.story)
+            sr = StepResult(index=j, step=step, status="pass", node_id=node.id,
+                            node_story=node.story)
             try:
                 await page.goto(link, timeout=30000, wait_until="domcontentloaded")
                 await asyncio.sleep(1.0)
@@ -517,7 +549,8 @@ class Engine:
             except Exception as e:
                 sr.status, sr.error = "fail", str(e)[:400]
             result.step_results.append(sr)
-            self._emit("step_end", index=j, status=sr.status, error=sr.error)
+            self._emit("step_end", index=j, node_id=node.id,
+                       status=sr.status, error=sr.error)
 
     # ---- record -----------------------------------------------------------------
     async def record(self, url: str, site: str = "default", name: str = "",

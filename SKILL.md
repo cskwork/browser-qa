@@ -1,6 +1,6 @@
 ---
 name: superqa
-description: Browser QA for any website. Use when the user says QA or browser test; gives a URL to verify; names a known domain or feature to re-QA; wants a regression sweep after a feature lands; asks for a quick smoke check; wants to record a test by clicking, schedule one, or open the QA dashboard; or needs QA against a local stack because the shared environment is down or the cases are destructive.
+description: Browser QA for any website with reviewable YAML DAG scenarios. Use when the user says QA or browser test; gives a URL to verify; names a known domain or feature to re-QA; wants a regression sweep after a feature lands; asks for a quick smoke check; wants to record a test by clicking, schedule one, or open the QA dashboard; or needs QA against a local stack because the shared environment is down or the cases are destructive.
 ---
 
 # SuperQA - browser QA on anything, for anyone
@@ -52,6 +52,13 @@ user's language. Never claim a check passed without a run directory + report to 
 9. **Exploration engine follows the cascade.** ego-browser (ego-lite) first on macOS,
    then Playwright MCP, then `playwright-cli`, then any other installed driver.
    Deterministic replay is always the superqa engine (`reference/engines.md`).
+10. **Scenario DAG is the review contract.** New or recorded cases use `dag.nodes`,
+    each with a stable `id`, a user-story `story`, user-visible `acceptance`, and explicit
+    `depends_on`. Never put selectors, values, or browser actions in this YAML; the local
+    runtime binding holds replay mechanics. Run `superqa dag check --all --site <site>`
+    and inspect the local Admin graph before execution. Legacy `steps:` files remain
+    readable without being rewritten; only `superqa dag migrate` changes them
+    (`reference/scenario-format.md`).
 
 ## EXPLORE-QA loop (default when only a URL/prompt is given)
 
@@ -60,9 +67,11 @@ user's language. Never claim a check passed without a run directory + report to 
 2. **Explore.** Drive the live site with the selected engine (snapshot -> click ->
    snapshot; `reference/engines.md`), mapping entry flow, login, menus,
    popups/new tabs (`reference/agent-qa.md`).
-3. **Generate cases.** Write scenario YAMLs to `~/.superqa/scenarios/<site>/` covering:
-   happy path, validation, error paths, edge cases, and every popup/tab transition you
-   found (`reference/scenario-gen.md`).
+3. **Generate cases.** Write user-story `dag.nodes` YAMLs to
+   `~/.superqa/scenarios/<site>/` covering happy path, validation, error paths, edge
+   cases, and meaningful popup/tab transitions. Review story/acceptance/dependencies
+   with `superqa dag check --all --site <site>` and the Admin graph, then create the
+   separate local runtime binding (`reference/scenario-gen.md`).
 4. **Run.** `python3 -m superqa_tui run --all --site <site> --headless` (from this skill's
    root, or the installed `superqa` command).
 5. **Report.** Read the report, triage side effects, summarize for the user in their
@@ -71,8 +80,10 @@ user's language. Never claim a check passed without a run directory + report to 
 ## Non-dev lane (what you tell users)
 
 - **Web admin (most clickable): `superqa serve`** opens a browser dashboard listing every
-  scenario - recorded and agent-authored alike - with a Run button each, live progress,
-  run history, and inline reports. Same data as the TUI/CLI.
+  scenario - recorded and agent-authored alike - with its user-story dependency DAG, a
+  Run button, live progress, run history, and inline reports. It exposes only node IDs,
+  stories, acceptance criteria, and dependency links; local selectors and values stay
+  out of the graph. Same data as the TUI/CLI.
 - Terminal TUI: `bash scripts/superqa.sh` - `n` record by clicking in a real browser,
   `r` run, `a` run all, `u` auto QA, `s` schedule, `v` accounts/vars, `o` open report.
 - While recording, a SuperQA panel floats in the browser (pause / add-assertion /
@@ -86,15 +97,15 @@ user's language. Never claim a check passed without a run directory + report to 
 | `reference/domain-packs.md` | DOMAIN-QA: per-domain/feature packs, script archiving, pack location config |
 | `reference/engines.md` | exploration engine cascade (ego-browser -> Playwright MCP -> playwright-cli -> other) |
 | `reference/agent-qa.md` | EXPLORE-QA / REGRESSION procedure for the agent |
-| `reference/scenario-gen.md` | prompt -> scenario case design method |
-| `reference/scenario-format.md` | YAML schema: actions, selectors, `{{vars}}`, policy |
+| `reference/scenario-gen.md` | prompt -> reviewable DAG scenario case design method |
+| `reference/scenario-format.md` | user-story YAML DAG schema, local runtime binding, `{{vars}}`, policy |
 | `reference/side-effects.md` | what is captured; triage rules |
 | `reference/site-rules.md` | local per-site knowledge protocol (never commit) |
 | `reference/report.md` | report structure + language rules |
 | `reference/tui.md` | TUI / record / schedule usage for humans |
 | `reference/local-offline.md` | LOCAL-OFFLINE: local stack + data subset, DB-derived fixtures, differential proof |
 
-**Done =** mode stated; scenarios exist as YAML under `~/.superqa/scenarios/<site>/`;
-run executed with report path quoted; side effects triaged; site rules updated;
+**Done =** mode stated; scenarios exist as checked YAML DAGs under `~/.superqa/scenarios/<site>/`;
+Admin graph reviewed; run executed with report path quoted; side effects triaged; site rules updated;
 domain pack updated (feature map + any new reusable script archived);
 no site-specific data staged for commit.

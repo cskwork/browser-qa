@@ -8,6 +8,7 @@
   superqa vars set|list|delete  -> account/variable store (SQLite, masked)
   superqa schedule add|list|remove|daemon
   superqa report [open]         -> print/open latest report
+  superqa dag check|migrate     -> validate or explicitly migrate scenario YAML
 """
 from __future__ import annotations
 
@@ -296,9 +297,55 @@ def cmd_list(_args) -> int:
     if not scs:
         print(t("no_scenarios"))
     for s in scs:
-        print(f"  {s.site:12s} {s.name:30s} {len(s.steps)}단계  {s.path}")
+        print(f"  {s.site:12s} {s.name:30s} {len(s.nodes)}개 사용자 스토리  {s.path}")
     for path, err in broken_scenarios():
         print(f"  [경고] 읽을 수 없는 시나리오: {path} - {err}")
+    return 0
+
+
+def cmd_dag(args) -> int:
+    """Validate DAGs or explicitly migrate legacy ``steps`` YAML files."""
+    if args.all:
+        scenarios = [scenario for scenario in list_scenarios()
+                     if not args.site or scenario.site == args.site]
+        broken = [(path, error) for path, error in broken_scenarios()
+                  if not args.site or path.parent.name == args.site]
+    elif args.scenario:
+        try:
+            scenarios = [find_scenario(args.scenario)]
+        except Exception as error:
+            print(f"시나리오를 읽을 수 없습니다: {error}")
+            return 1
+        broken = []
+    else:
+        print("사용법: superqa dag check|migrate <시나리오> 또는 --all [--site SITE]")
+        return 2
+
+    if not scenarios and not broken:
+        print("대상 시나리오가 없습니다.")
+        return 1
+    for path, error in broken:
+        print(f"  [오류] {path}: {error}")
+    if args.dag_cmd == "check":
+        for scenario in scenarios:
+            graph = scenario.dag_data()
+            missing = len(scenario.missing_runtime_nodes())
+            replay = (f", 로컬 바인딩 없음 {missing}개 (검토 전용)" if missing else "")
+            print(f"  [OK] {scenario.name}: {graph['node_count']}개 사용자 스토리, "
+                  f"{len(graph['edges'])}개 의존성 ({graph['format']}){replay}")
+        return 1 if broken else 0
+
+    # A bulk migration is intentionally all-or-nothing with respect to malformed
+    # files in its selected scope: an operator fixes them before changing storage.
+    if broken:
+        print("오류가 있는 YAML을 먼저 고친 뒤 다시 마이그레이션하세요.")
+        return 1
+    for scenario in scenarios:
+        if scenario.storage_format == "dag":
+            print(f"  [유지] {scenario.name}: 이미 DAG YAML")
+            continue
+        path = scenario.migrate_to_dag()
+        print(f"  [변환] {scenario.name}: {path}")
     return 0
 
 
@@ -373,6 +420,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     ls = sub.add_parser("list", help="시나리오 목록")
     ls.set_defaults(func=cmd_list)
+
+    dag = sub.add_parser("dag", help="시나리오 DAG 검증 / 명시적 마이그레이션")
+    dag.add_argument("dag_cmd", choices=["check", "migrate"])
+    dag.add_argument("scenario", nargs="?", help="시나리오 이름 또는 YAML 경로")
+    dag.add_argument("--all", action="store_true", help="선택 사이트의 모든 시나리오")
+    dag.add_argument("--site", default="", help="사이트 필터 (--all과 함께 사용)")
+    dag.set_defaults(func=cmd_dag)
     return p
 
 
