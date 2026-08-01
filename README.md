@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.png" width="120" alt="logo" /></p>
+
 # SuperQA
 
 Browser QA on any website - dev, staging, or prod - for anyone.
