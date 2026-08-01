@@ -1,7 +1,7 @@
 {
   "name": "superqa",
   "version": "0.1.0",
-  "description": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user says QA or browser test; gives a URL...",
+  "description": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
   "author": {
     "name": "cskwork",
     "url": "https://github.com/cskwork"
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Superqa",
-    "shortDescription": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user",
-    "longDescription": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user says QA or browser test; gives a URL...",
+    "shortDescription": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
+    "longDescription": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
     "developerName": "cskwork",
     "category": "Productivity",
     "capabilities": [

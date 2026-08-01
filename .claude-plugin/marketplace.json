@@ -1,14 +1,14 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
   "name": "superqa",
-  "description": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user says QA or browser test; gives a URL to",
+  "description": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
   "owner": {
     "name": "cskwork"
   },
   "plugins": [
     {
       "name": "superqa",
-      "description": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user says QA or browser test; gives a URL to",
+      "description": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
       "source": "./",
       "category": "productivity"
     }

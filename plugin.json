@@ -1,4 +1,4 @@
 {
   "name": "superqa",
-  "description": "Browser QA for any website with reviewable YAML DAG scenarios. Use when the user says QA or browser test; gives a URL..."
+  "description": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test."
 }
