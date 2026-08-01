@@ -110,7 +110,7 @@ class SuperQAApp(App):
 
     def on_mount(self) -> None:
         table = self.query_one("#scenario-table", DataTable)
-        table.add_columns("사이트", "시나리오", "단계", "태그")
+        table.add_columns("사이트", "시나리오", "사용자 스토리", "태그")
         runs = self.query_one("#runs-table", DataTable)
         runs.add_columns("시각", "시나리오", "결과", "성공/실패", "부작용")
         self.refresh_scenarios()
@@ -129,7 +129,7 @@ class SuperQAApp(App):
         table = self.query_one("#scenario-table", DataTable)
         table.clear()
         for sc in self.scenarios:
-            table.add_row(sc.site, sc.name, str(len(sc.steps)), ",".join(sc.tags))
+            table.add_row(sc.site, sc.name, str(len(sc.nodes)), ",".join(sc.tags))
         for path, err in broken_scenarios():
             self.log_line(f"[yellow]경고: 읽을 수 없는 시나리오 {path.name} - {err}[/yellow]")
         sched = {e.scenario for e in load_schedules() if e.enabled}
@@ -234,7 +234,7 @@ class SuperQAApp(App):
         engine = Engine(store=self.store, headed=True, on_event=self._engine_event)
         sc = await engine.record(answers["url"], site=answers.get("site") or "default",
                                  name=answers.get("name") or "")
-        self.log_line(f"{t('saved')}: {sc.path} ({len(sc.steps)}단계)")
+        self.log_line(f"{t('saved')}: {sc.path} ({len(sc.nodes)}개 사용자 스토리)")
         self.refresh_scenarios()
 
     @work(exclusive=True)

@@ -30,6 +30,9 @@ URL 하나와 한 줄 요청만 주면 SuperQA가 사이트를 탐색해 테스�
   (`superqa baseline`), 이후 실행마다 단계별 스크린샷을 픽셀 비교해 레이아웃 변화가
   빨간색 diff 이미지와 함께 표시됩니다. 실패한 실행은 Playwright `trace.zip`으로
   실패 순간을 되돌려볼 수 있습니다.
+- **검토 가능한 사용자 스토리 DAG**: 새 케이스는 안정적인 ID, 사용자 스토리, 눈에
+  보이는 인수 기준, 선행 조건을 YAML에 저장합니다. `superqa dag check`가 구조를
+  검사하고, 로컬 Admin은 브라우저 동작·값·비밀을 보이지 않은 채 분기와 합류를 그려 줍니다.
 - **CI 연동**: `--junit results.xml`로 Jenkins/GitHub Actions에서 네이티브 테스트
   결과로 표시. `superqa doctor`가 환경 문제를 우리말로 진단합니다.
 
@@ -52,8 +55,8 @@ bash scripts/superqa.sh              # 또는 터미널 TUI
 ```
 
 **웹 admin**(`superqa serve` -> http://127.0.0.1:8760)이 가장 클릭하기 쉬운 화면입니다.
-녹화·에이전트 생성 시나리오 전부를 실행 버튼과 함께 보여주고, 실시간 진행·실행 이력·
-리포트 열람까지 됩니다. TUI/CLI와 같은 데이터를 공유합니다.
+녹화·에이전트 생성 시나리오 전부를 의존성 DAG와 실행 버튼으로 보여주고, 실시간 진행·
+실행 이력·리포트 열람까지 됩니다. TUI/CLI와 같은 데이터를 공유합니다.
 
 - `n` - 기록: 크롬 창이 열리고 우측 하단에 SuperQA 패널이 뜹니다. 평소처럼
   클릭하면 각 클릭/입력이 단계가 됩니다. 비밀번호는 평문이 아닌 `{{password}}`로
@@ -69,6 +72,7 @@ bash scripts/superqa.sh              # 또는 터미널 TUI
 superqa record https://myshop.example.com --site myshop --name 로그인-정상
 superqa vars set myshop username myid
 superqa vars set myshop password s3cret          # 리포트에서 자동 마스킹
+superqa dag check --all --site myshop             # 재생 전 YAML DAG 검사
 superqa run --all --site myshop --headless        # 종료 코드 0 = 전부 성공
 superqa auto https://myshop.example.com           # 설정 없는 스모크 QA
 superqa schedule add 로그인-정상 --every 30 && superqa schedule daemon
@@ -106,15 +110,28 @@ name: 로그인-정상
 site: myshop
 language: ko
 policy: { dialogs: accept, popups: follow }
-steps:
-  - { action: goto, url: "{{entry_url}}", description: 사이트 접속 }
-  - { action: fill, selector: "#username", value: "{{username}}", description: 아이디 입력 }
-  - { action: click, selector: { role: button, name: 로그인 }, description: 로그인 버튼 클릭 }
-  - { action: expect_text, selector: "#welcome", value: "{{username}}", description: 환영 문구 확인 }
+dag:
+  nodes:
+    - id: arrive-login
+      story: "방문자로서 서비스의 로그인 시작점에 도착할 수 있다."
+      depends_on: []
+      acceptance: ["로그인 입력 화면이 표시된다."]
+    - id: prepare-login
+      story: "등록 회원은 자신의 로그인 정보를 준비할 수 있다."
+      depends_on: [arrive-login]
+      acceptance: ["아이디와 비밀번호를 입력할 수 있다."]
+    - id: reach-account
+      story: "회원으로서 내 계정에 접근하기 위해 로그인할 수 있다."
+      depends_on: [prepare-login]
+      acceptance: ["환영 문구와 계정 영역이 표시된다."]
 ```
 
-알림창(alert/confirm/prompt)은 정책에 따라 자동 처리되고, 새 탭을 여는 클릭은
-자동으로 따라갑니다(`expect_popup: true`면 탭이 필수).
+검토용 YAML에는 `action`, `selector`, 입력값이 없습니다. 녹화기/QA 에이전트가 상세
+브라우저 바인딩을 `~/.superqa/runtimes/`에 로컬로만 두므로, 하나의 스토리가 여러
+브라우저 동작을 재현해도 검토 그래프는 잘게 쪼개지지 않습니다. 노드는 안정적인 위상
+순서로 하나씩 실행하며(동률은 YAML 선언 순서), DAG는 그 분기와 합류를 사람이 검토하게
+해 줍니다. 기존 `steps:` 파일은 읽거나 실행해도 바뀌지 않으며, 바꾸고 싶을 때만
+`superqa dag migrate`를 실행합니다.
 
 ## 도메인 QA 팩
 
@@ -141,6 +158,7 @@ ego-browser(ego-lite) 우선, 다음 Playwright MCP, `playwright-cli`, 기타 �
 ├── superqa.db               # 계정/변수 (SQLite; 비밀 키는 리포트에서 마스킹)
 ├── config.yaml              # 팩 위치 + 탐색 엔진 선택
 ├── scenarios/<site>/*.yaml  # 테스트 케이스
+├── runtimes/<site>/*.yaml   # 로컬 브라우저 바인딩; 검토용 YAML과 분리
 ├── reports/                 # 실행 증적
 ├── packs/<domain>/          # 기능 맵 + 재사용 QA 스크립트 보관소
 └── sites/<site>/rules.md    # 에이전트가 관리하는 사이트별 플레이북
@@ -151,6 +169,8 @@ ego-browser(ego-lite) 우선, 다음 Playwright MCP, `playwright-cli`, 기타 �
 ```bash
 python3 tests/test_engine_smoke.py   # 로컬 픽스처로 재현/기록/자동QA 검증
 python3 tests/test_tui_smoke.py      # Textual 파일럿 스모크
+python3 tests/test_dag.py            # DAG 검사·마이그레이션·실행 의미 검증
+python3 tests/test_admin.py          # Admin 그래프 렌더링 + 실제 재생
 ```
 
 실제 운영 중인 사이트 2곳에서 전체 파이프라인(시나리오, 알림창, 다중 탭 팝업 체인,
