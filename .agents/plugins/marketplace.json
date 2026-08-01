@@ -1,0 +1,21 @@
+{
+  "name": "superqa",
+  "interface": {
+    "displayName": "Superqa"
+  },
+  "plugins": [
+    {
+      "name": "superqa",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/cskwork/superqa-skill.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
