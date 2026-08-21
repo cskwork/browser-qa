@@ -12,7 +12,7 @@ dialogs/popups/tabs), and writes a report a non-developer can read - in your lan
 Two ways to use it:
 
 - **As a Claude Code skill** - the agent reads `SKILL.md`, explores with
-  `playwright-cli`, writes scenario YAMLs, runs them deterministically, and triages the
+  agent-browser, writes scenario YAMLs, runs them deterministically, and triages the
   findings for you.
 - **As a standalone app** - a Textual TUI plus CLI. Record a scenario by clicking
   through the site in a real browser, then run, schedule, and automate it. No code.
@@ -150,10 +150,18 @@ harnesses that would otherwise die in ticket folders. Saying "QA \<domain\>
 \<feature\>" loads the pack and runs what already exists; only gaps get explored.
 See [reference/domain-packs.md](reference/domain-packs.md).
 
-Interactive exploration picks the best installed engine automatically:
-ego-browser (ego-lite) first on macOS, then Playwright MCP, then `playwright-cli`,
-then other drivers ([reference/engines.md](reference/engines.md)). Deterministic
-replay and reports always come from the browser-qa engine.
+Interactive exploration picks the engine by what the case needs, then falls back to
+the cascade. The default is **agent-browser**: it follows popups and new windows,
+records API requests with their **response bodies**, and ships native binaries for
+macOS, Linux and Windows. When the target needs the user's own logged-in session,
+take ego-browser on macOS; after that Playwright MCP, `playwright-cli`, and
+chrome-devtools-mcp for deep network work ([reference/engines.md](reference/engines.md)).
+
+One engine per page: chrome-devtools-mcp only records traffic it navigated itself, so
+driving with another engine and inspecting here yields an empty network log. lightpanda
+is not used - no renderer means no screenshots, and popups never open.
+
+Deterministic replay and reports always come from the browser-qa engine.
 
 ## Site data stays local
 

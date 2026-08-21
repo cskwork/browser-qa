@@ -9,7 +9,7 @@ URL 하나와 한 줄 요청만 주면 browser-qa가 사이트를 탐색해 테�
 
 사용 방법은 두 가지:
 
-- **Claude Code 스킬로** - 에이전트가 `SKILL.md`를 읽고 `playwright-cli`로 탐색,
+- **Claude Code 스킬로** - 에이전트가 `SKILL.md`를 읽고 agent-browser로 탐색,
   시나리오 YAML 생성, 결정적 실행, 결과 분류까지 대신합니다.
 - **독립 앱으로** - Textual TUI + CLI. 실제 브라우저에서 클릭만 하면 시나리오가
   기록되고, 실행/스케줄/자동화까지 코드 없이 됩니다.
@@ -143,10 +143,17 @@ dag:
 하면 팩을 읽고 이미 있는 것부터 실행하며, 빈 곳만 새로 탐색합니다.
 [reference/domain-packs.md](reference/domain-packs.md) 참조.
 
-탐색용 브라우저 엔진은 설치된 것 중 최선을 자동 선택합니다: macOS에서는
-ego-browser(ego-lite) 우선, 다음 Playwright MCP, `playwright-cli`, 기타 드라이버
-순서 ([reference/engines.md](reference/engines.md)). 결정적 재생과 리포트는
-항상 browser-qa 엔진이 담당합니다.
+탐색용 브라우저 엔진은 필요한 능력으로 먼저 고르고, 그다음 캐스케이드 순서를 따릅니다.
+기본은 **agent-browser**입니다 — 팝업·새 창을 따라가고 API 요청과 **응답 본문**까지
+남기며 macOS/Linux/Windows 네이티브로 돕니다. 사용자가 이미 로그인해 둔 세션이 필요하면
+macOS에서 ego-browser, 그다음 Playwright MCP, `playwright-cli`, 깊은 네트워크 추적에는
+chrome-devtools-mcp ([reference/engines.md](reference/engines.md)).
+
+한 페이지에는 엔진 하나만 씁니다. chrome-devtools-mcp는 자기가 이동시킨 페이지의 트래픽만
+기록하므로, 다른 엔진으로 몰고 여기서 들여다보면 네트워크 로그가 빈 채로 나옵니다.
+lightpanda는 쓰지 않습니다 — 렌더러가 없어 스크린샷이 불가능하고 팝업이 열리지 않습니다.
+
+결정적 재생과 리포트는 항상 browser-qa 엔진이 담당합니다.
 
 ## 사이트 정보는 로컬에만
 
