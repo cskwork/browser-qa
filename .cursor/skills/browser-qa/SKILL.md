@@ -6,7 +6,7 @@ description: Browser QA for any website with reviewable YAML DAG scenarios, plus
 # browser-qa - browser QA on anything, for anyone
 
 Skill `browser-qa`, runtime command `superqa`. Contract: prompt -> scenarios -> real
-browser evidence -> report in the user's language. Never claim a pass without a report.
+browser evidence -> report in the user's language.
 
 ## Mode (classify the request, state it in one line)
 
@@ -18,7 +18,7 @@ browser evidence -> report in the user's language. Never claim a pass without a 
 | "quick check / smoke / is it up" | AUTO | `superqa auto <url> --site <site>` |
 | non-dev wants to create a test by clicking | RECORD | `superqa record <url>` or TUI `n` key (`reference/tui.md`) |
 | "every N minutes / daily / automate" | SCHEDULE | `superqa schedule add <scenario> --every <min>` + daemon (`reference/tui.md`) |
-| "open the QA app / dashboard" | TUI | `bash scripts/superqa.sh` |
+| "open the QA app / dashboard" | TUI | web dashboard `superqa serve`; terminal `bash scripts/superqa.sh` (`reference/tui.md`) |
 | "test locally / without the dev server / offline", shared env down, destructive cases | LOCAL-OFFLINE | bring the stack up locally, run the same scenarios with `--var base_url=...` (`reference/local-offline.md`) |
 
 ## Hard rules
@@ -40,12 +40,12 @@ browser evidence -> report in the user's language. Never claim a pass without a 
    `policy:` overrides (`reference/scenario-format.md`).
 7. **Local copies of shared data are read-only at source, subsetted, redacted, uncommitted.**
    Local config gets dummy secrets only (`reference/local-offline.md`).
-8. **Archive reusable scripts, do not abandon them.** Useful helpers go to
+8. **Archive reusable scripts.** Useful helpers go to
    `<packs_home>/<domain>/<feature>/scripts/` with a provenance header; check the pack
    before writing a new one (`reference/domain-packs.md`).
 9. **Capability picks the engine, then the cascade.** Response bodies, popups, or Windows
    parity - go straight to the proven engine. One engine per page. Never lightpanda.
-   Replay is always the superqa engine (`reference/engines.md`).
+   Replay is always the browser-qa engine (`reference/engines.md`).
 10. **The DAG is the review contract.** `dag.nodes` with stable `id`, `story`, `acceptance`,
     `depends_on` - no selectors or values, those live in the local runtime binding. Run
     `superqa dag check --all --site <site>` before executing. Legacy `steps:` files stay
@@ -63,8 +63,8 @@ browser evidence -> report in the user's language. Never claim a pass without a 
    cases, and meaningful popup/tab transitions. Review story/acceptance/dependencies
    with `superqa dag check --all --site <site>` and the Admin graph, then create the
    separate local runtime binding (`reference/scenario-gen.md`).
-4. **Run.** `python3 -m superqa_tui run --all --site <site> --headless` (from this skill's
-   root, or the installed `superqa` command).
+4. **Run.** `superqa run --all --site <site> --headless`; without the installed command,
+   `python3 -m superqa_tui run ...` from the checkout root, where `superqa_tui/` lives.
 5. **Report.** Read the report, triage side effects, summarize for the user in their
    language with the report path. Update the local site rules file with what you learned.
 
@@ -94,6 +94,8 @@ browser evidence -> report in the user's language. Never claim a pass without a 
 | `reference/tui.md` | TUI / record / schedule usage for humans |
 | `reference/local-offline.md` | LOCAL-OFFLINE: local stack + data subset, DB-derived fixtures, differential proof |
 
-**Done =** mode stated; scenarios exist as checked YAML DAGs under
+**Done =** mode stated. QA runs: scenarios exist as checked YAML DAGs under
 `~/.superqa/scenarios/<site>/`; graph reviewed; run executed with the report path quoted;
-side effects triaged; site rules and domain pack updated; no site data staged for commit.
+side effects triaged; site rules updated, plus the domain pack in DOMAIN-QA; site data
+still only in `~/.superqa/`. RECORD / SCHEDULE / TUI: the surface is up and the user knows
+which keys drive it.
