@@ -6,17 +6,27 @@ Two layers, do not confuse them:
   (`python3 -m superqa_tui run ...`, Playwright underneath). Reports, side
   effects, diffs come from here. Engines below do NOT replace it.
 - **Interactive exploration / ad-hoc driving** (EXPLORE-QA step 2, one-off
-  checks, archived driving scripts) uses the best available engine per the
-  cascade below.
+  checks, archived driving scripts) uses an engine from the cascade below.
+
+## Capability gate (check before the cascade)
+
+| Task needs | Use |
+|---|---|
+| API request **and response body** | `agent-browser network request <id> --json`, or chrome-devtools-mcp `get_network_request` |
+| popup / multi-window flow | `agent-browser tab list`, or chrome-devtools-mcp `list_pages` + `select_page` |
+| a login the user already has | ego-browser, or shared Chrome with a hand-done login |
+| Windows parity | agent-browser, playwright-cli (both ship native win32 binaries) |
+| plain exploration | cascade order |
 
 ## Cascade (first available wins)
 
 | # | Engine | Detect | Use via |
 |---|---|---|---|
 | 1 | **ego-browser** (ego-lite) - macOS default | `command -v ego-browser` | the `ego-browser` skill if installed, else `ego-browser nodejs <<'EOF' ... EOF` heredocs |
-| 2 | Playwright MCP | playwright/browser MCP tools present in the session | its `browser_*` tools |
-| 3 | `playwright-cli` | `command -v playwright-cli` | commands in `reference/agent-qa.md` step 2 |
-| 4 | agentbrowser or any other installed driver | `command -v agentbrowser` | its own CLI |
+| 2 | **agent-browser** - cheapest loop, popups + network built in | `command -v agent-browser` | `reference/agent-browser.md` |
+| 3 | Playwright MCP | playwright/browser MCP tools present in the session | its `browser_*` tools |
+| 4 | `playwright-cli` | `command -v playwright-cli` | commands in `reference/agent-qa.md` step 2 |
+| 5 | chrome-devtools-mcp - deep network only | `chrome-devtools` MCP tools present | `reference/agent-browser.md` |
 
 Record the working choice per machine so detection runs once:
 
@@ -28,6 +38,13 @@ engine: ego-browser        # exploration engine; replay is always superqa
 If the recorded engine stops working, fall through the cascade again and
 update the value.
 
+## One engine per page
+
+chrome-devtools-mcp records traffic **only for pages it navigated itself**.
+Drive with agent-browser and inspect with the MCP and `list_network_requests`
+returns `No requests found`. Pick one engine per page before you start; do not
+hand a page off mid-flow.
+
 ## Why ego-browser first on macOS
 
 Isolated agent task spaces that reuse the user's login state - authenticated
@@ -35,6 +52,13 @@ exploration without stealing the user's browser, and without re-teaching
 logins that already exist. Prefer it whenever the target needs a real
 logged-in session. For anonymous public pages any engine is equivalent;
 don't churn engines mid-task.
+
+## Never: lightpanda
+
+No graphical rendering engine, so screenshots are impossible - it returns a
+placeholder image. `window.open` yields a `[object CrossOriginWindow]` stub, so
+popup and viewer flows are unreachable. No native Windows binary (WSL2 only).
+Measured limits: `reference/agent-browser.md`.
 
 ## Engine-agnostic exploration contract
 

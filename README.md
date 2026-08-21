@@ -44,8 +44,8 @@ Two ways to use it:
 ## Install
 
 ```bash
-git clone https://github.com/cskwork/superqa-skill ~/.claude/skills/superqa
-cd ~/.claude/skills/superqa
+git clone https://github.com/cskwork/superqa-skill ~/.claude/skills/browser-qa
+cd ~/.claude/skills/browser-qa
 pip3 install textual playwright pyyaml && python3 -m playwright install chromium
 # optional: pip3 install -e .   ->  gives you the `superqa` command
 ```

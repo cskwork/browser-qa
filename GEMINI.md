@@ -1,4 +1,4 @@
-# superqa
+# browser-qa
 
-@./skills/superqa/SKILL.md
+@./skills/browser-qa/SKILL.md
 
