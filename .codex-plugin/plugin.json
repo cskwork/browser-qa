@@ -27,7 +27,7 @@
     ],
     "websiteURL": "https://github.com/cskwork/superqa-skill",
     "defaultPrompt": [
-      "Use superqa for this task."
+      "Use the browser-qa skill for this task."
     ],
     "brandColor": "#2563EB",
     "composerIcon": "./logo.png",

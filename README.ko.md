@@ -39,8 +39,8 @@ URL 하나와 한 줄 요청만 주면 SuperQA가 사이트를 탐색해 테스�
 ## 설치
 
 ```bash
-git clone https://github.com/cskwork/superqa-skill ~/.claude/skills/superqa
-cd ~/.claude/skills/superqa
+git clone https://github.com/cskwork/superqa-skill ~/.claude/skills/browser-qa
+cd ~/.claude/skills/browser-qa
 pip3 install textual playwright pyyaml && python3 -m playwright install chromium
 # 선택: pip3 install -e .   ->  `superqa` 명령 사용 가능
 ```

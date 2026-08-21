@@ -10,7 +10,7 @@ claude plugin marketplace add cskwork/superqa-skill
 claude plugin install superqa@superqa
 ```
 
-Type `/superqa`.
+Type `/browser-qa`.
 
 ### Verify
 
@@ -69,15 +69,6 @@ codex plugin marketplace remove superqa
 gemini extensions install https://github.com/cskwork/superqa-skill
 ```
 
-### Install (command, opt-in)
-
-```bash
-mkdir -p ~/.gemini/commands
-curl -fsSL https://raw.githubusercontent.com/cskwork/superqa-skill/main/skills/superqa-skill/agents/gemini.toml \
-  -o ~/.gemini/commands/superqa.toml
-```
-
-Type `/superqa` in a new session.
 
 ### Verify
 
@@ -103,7 +94,7 @@ npx skills add cskwork/superqa-skill
 npx skills add cskwork/superqa-skill -g
 ```
 
-Type `/superqa` in a new agent chat.
+Type `/browser-qa` in a new agent chat.
 
 ### Verify
 
