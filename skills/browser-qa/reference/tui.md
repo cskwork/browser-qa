@@ -42,7 +42,7 @@ Left pane: scenario list. Right: live run log + recent results. Footer shows eve
 ## Recording (browser click -> QA step)
 
 `n` asks for URL / site / name, then opens a real Chrome window with a floating
-SuperQA panel (bottom-right):
+browser-qa panel (bottom-right):
 
 - Click through the site normally - every click/input becomes a step, described in
   Korean ("'로그인' 클릭", "'아이디'에 'myid' 입력").

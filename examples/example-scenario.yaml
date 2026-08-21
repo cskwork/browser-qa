@@ -1,4 +1,4 @@
-# SuperQA 시나리오 예제 - ~/.superqa/scenarios/<site>/ 아래에 두면 목록에 나타납니다.
+# browser-qa 시나리오 예제 - ~/.superqa/scenarios/<site>/ 아래에 두면 목록에 나타납니다.
 # 계정 값은 커밋 금지: superqa vars set myshop username myid 로 저장하고 {{username}}으로 참조.
 name: 로그인-정상
 site: myshop

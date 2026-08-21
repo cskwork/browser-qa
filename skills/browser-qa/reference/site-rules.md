@@ -1,6 +1,6 @@
 # Site rules - local per-site knowledge (NEVER commit)
 
-SuperQA is site-agnostic. Everything specific to one site lives OUTSIDE the repo, under
+browser-qa is site-agnostic. Everything specific to one site lives OUTSIDE the repo, under
 `~/.superqa/`:
 
 ```

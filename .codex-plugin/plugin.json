@@ -1,23 +1,23 @@
 {
-  "name": "superqa",
+  "name": "browser-qa",
   "version": "0.1.0",
   "description": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
   "author": {
     "name": "cskwork",
     "url": "https://github.com/cskwork"
   },
-  "homepage": "https://github.com/cskwork/superqa-skill",
-  "repository": "https://github.com/cskwork/superqa-skill",
+  "homepage": "https://github.com/cskwork/browser-qa",
+  "repository": "https://github.com/cskwork/browser-qa",
   "license": "MIT",
   "keywords": [
-    "superqa",
+    "browser-qa",
     "skill",
     "claude-code",
     "codex"
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Superqa",
+    "displayName": "Browser QA",
     "shortDescription": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
     "longDescription": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
     "developerName": "cskwork",
@@ -25,7 +25,7 @@
     "capabilities": [
       "Instructions"
     ],
-    "websiteURL": "https://github.com/cskwork/superqa-skill",
+    "websiteURL": "https://github.com/cskwork/browser-qa",
     "defaultPrompt": [
       "Use the browser-qa skill for this task."
     ],
