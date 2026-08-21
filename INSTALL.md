@@ -6,8 +6,8 @@
 ### Install
 
 ```bash
-claude plugin marketplace add cskwork/superqa-skill
-claude plugin install superqa@superqa
+claude plugin marketplace add cskwork/browser-qa
+claude plugin install browser-qa@browser-qa
 ```
 
 Type `/browser-qa`.
@@ -39,8 +39,8 @@ claude plugin marketplace remove superqa
 ### Install
 
 ```bash
-codex plugin marketplace add cskwork/superqa-skill --ref main
-codex plugin add superqa@superqa
+codex plugin marketplace add cskwork/browser-qa --ref main
+codex plugin add browser-qa@browser-qa
 ```
 
 Type `$superqa`.
@@ -66,7 +66,7 @@ codex plugin marketplace remove superqa
 ### Install (extension, always-on)
 
 ```bash
-gemini extensions install https://github.com/cskwork/superqa-skill
+gemini extensions install https://github.com/cskwork/browser-qa
 ```
 
 
@@ -90,8 +90,8 @@ gemini extensions uninstall superqa
 ### Install
 
 ```bash
-npx skills add cskwork/superqa-skill
-npx skills add cskwork/superqa-skill -g
+npx skills add cskwork/browser-qa
+npx skills add cskwork/browser-qa -g
 ```
 
 Type `/browser-qa` in a new agent chat.
@@ -122,7 +122,7 @@ npx skills remove superqa
 ### Install
 
 ```bash
-agy plugin install https://github.com/cskwork/superqa-skill
+agy plugin install https://github.com/cskwork/browser-qa
 ```
 
 ### Verify

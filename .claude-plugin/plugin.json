@@ -1,5 +1,5 @@
 {
-  "name": "superqa",
+  "name": "browser-qa",
   "version": "0.1.0",
   "description": "Browser QA with reviewable YAML scenarios. Use when the user says QA, gives a URL to verify, or records a test.",
   "author": {

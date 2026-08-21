@@ -1,14 +1,14 @@
 {
-  "name": "superqa",
+  "name": "browser-qa",
   "interface": {
-    "displayName": "Superqa"
+    "displayName": "Browser QA"
   },
   "plugins": [
     {
-      "name": "superqa",
+      "name": "browser-qa",
       "source": {
         "source": "url",
-        "url": "https://github.com/cskwork/superqa-skill.git",
+        "url": "https://github.com/cskwork/browser-qa.git",
         "ref": "main"
       },
       "policy": {

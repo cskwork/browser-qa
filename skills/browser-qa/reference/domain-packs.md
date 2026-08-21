@@ -1,7 +1,7 @@
 # Domain QA packs - per-domain, per-feature QA that survives the session
 
 A **pack** is the durable home for one domain's QA: its feature map, reusable
-scripts, and pointers to scenarios/rules. Goal: invoking SuperQA on a known
+scripts, and pointers to scenarios/rules. Goal: invoking browser-qa on a known
 domain requires zero rediscovery - read the pack, pick the feature, run.
 
 Packs are user data, never repo content. Same hard rule as site rules:

@@ -65,7 +65,7 @@ loading.
 
 ## Local runtime binding
 
-To replay a reviewed story DAG, SuperQA keeps its detailed browser binding locally at:
+To replay a reviewed story DAG, browser-qa keeps its detailed browser binding locally at:
 
 ```text
 ~/.superqa/runtimes/<site>/<scenario-file-name>.yaml
@@ -96,7 +96,7 @@ It never sends local locators, input values, or resolved secrets to the browser.
 reports retain ordinal browser-operation screenshots for evidence and label each result
 with its user-story ID and story text.
 
-Replay is intentionally serial. SuperQA visits ready stories in stable topological order;
+Replay is intentionally serial. browser-qa visits ready stories in stable topological order;
 when two stories are ready, YAML declaration order breaks the tie. The operations within
 one story’s local binding run in their recorded order. A required failed operation stops
 the scenario; an optional failed operation is recorded as skipped and replay continues.

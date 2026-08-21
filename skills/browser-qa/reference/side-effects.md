@@ -1,4 +1,4 @@
-# Side effects - what SuperQA watches while your scenario runs
+# Side effects - what browser-qa watches while your scenario runs
 
 Every run attaches collectors to the whole browser context (including popups):
 

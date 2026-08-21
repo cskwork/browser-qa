@@ -1,10 +1,10 @@
 <p align="center"><img src="logo.png" width="120" alt="logo" /></p>
 
-# SuperQA
+# browser-qa
 
 Browser QA on any website - dev, staging, or prod - for anyone.
 
-Give it a URL and a one-line prompt, and SuperQA explores the site, generates test
+Give it a URL and a one-line prompt, and browser-qa explores the site, generates test
 scenario cases, drives a real browser through them, detects side effects the flow
 itself would never assert (console errors, JS exceptions, failed requests, unexpected
 dialogs/popups/tabs), and writes a report a non-developer can read - in your language.
@@ -23,7 +23,7 @@ Two ways to use it:
   site's saved cases (`superqa run --all --site myshop`) and get a regression verdict
   with evidence in minutes.
 - Non-developers own the tests: recording is literally clicking through the site while
-  a floating SuperQA panel captures each step with a human-readable description.
+  a floating browser-qa panel captures each step with a human-readable description.
 - Side effects are first-class: every run watches the whole browser context - including
   popups - so a 500 on an API, an uncaught exception, or an unexpected new tab shows up
   even when every asserted step passed. Duplicates are counted, known noise is split
@@ -44,7 +44,7 @@ Two ways to use it:
 ## Install
 
 ```bash
-git clone https://github.com/cskwork/superqa-skill ~/.claude/skills/browser-qa
+git clone https://github.com/cskwork/browser-qa ~/.claude/skills/browser-qa
 cd ~/.claude/skills/browser-qa
 pip3 install textual playwright pyyaml && python3 -m playwright install chromium
 # optional: pip3 install -e .   ->  gives you the `superqa` command
@@ -64,7 +64,7 @@ surface: every scenario - recorded or agent-authored - with a reviewable depende
 DAG, a Run button, live progress, run history, and inline reports. It shares the
 TUI/CLI data.
 
-- `n` - record: a Chrome window opens with a SuperQA panel (bottom-right). Click
+- `n` - record: a Chrome window opens with a browser-qa panel (bottom-right). Click
   through the site; every click/input becomes a step. Passwords are stored as
   `{{password}}` placeholders, never plain text. Press "저장 후 종료" to save.
 - `r` - run the selected scenario and watch the browser replay it.
@@ -153,7 +153,7 @@ See [reference/domain-packs.md](reference/domain-packs.md).
 Interactive exploration picks the best installed engine automatically:
 ego-browser (ego-lite) first on macOS, then Playwright MCP, then `playwright-cli`,
 then other drivers ([reference/engines.md](reference/engines.md)). Deterministic
-replay and reports always come from the SuperQA engine.
+replay and reports always come from the browser-qa engine.
 
 ## Site data stays local
 

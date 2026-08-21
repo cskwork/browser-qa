@@ -2,7 +2,7 @@
 
 Two layers, do not confuse them:
 
-- **Deterministic replay** of scenario YAMLs is always the SuperQA engine
+- **Deterministic replay** of scenario YAMLs is always the browser-qa engine
   (`python3 -m superqa_tui run ...`, Playwright underneath). Reports, side
   effects, diffs come from here. Engines below do NOT replace it.
 - **Interactive exploration / ad-hoc driving** (EXPLORE-QA step 2, one-off

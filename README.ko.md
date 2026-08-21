@@ -1,8 +1,8 @@
-# SuperQA
+# browser-qa
 
 어떤 웹사이트든 - 개발/스테이징/운영 - 누구나 할 수 있는 브라우저 QA.
 
-URL 하나와 한 줄 요청만 주면 SuperQA가 사이트를 탐색해 테스트 시나리오 케이스를
+URL 하나와 한 줄 요청만 주면 browser-qa가 사이트를 탐색해 테스트 시나리오 케이스를
 만들고, 실제 브라우저로 실행하고, 흐름만 봐서는 못 잡는 부작용(콘솔 오류, JS 예외,
 네트워크 요청 실패, 예상 밖 알림창/팝업/새 탭)을 감지해, 비개발자도 읽을 수 있는
 리포트를 사용자의 언어로 만들어 줍니다.
@@ -20,7 +20,7 @@ URL 하나와 한 줄 요청만 주면 SuperQA가 사이트를 탐색해 테스�
   `superqa run --all --site myshop` 한 줄로 저장된 케이스 전체를 회귀 실행하고
   증적이 첨부된 판정을 몇 분 안에 받습니다.
 - **비개발자가 테스트를 소유**: 기록은 말 그대로 사이트를 클릭하는 것. 떠 있는
-  SuperQA 패널이 각 단계를 사람이 읽는 설명과 함께 캡처합니다.
+  browser-qa 패널이 각 단계를 사람이 읽는 설명과 함께 캡처합니다.
 - **부작용이 일급 시민**: 매 실행마다 팝업을 포함한 브라우저 전체를 감시하므로,
   단언한 단계가 전부 성공해도 API 500, 미처리 예외, 예상 밖 새 탭이 드러납니다.
   중복은 횟수로 합쳐지고, 알려진 노이즈는 사이트별 ignore 규칙으로 분리됩니다.
@@ -39,7 +39,7 @@ URL 하나와 한 줄 요청만 주면 SuperQA가 사이트를 탐색해 테스�
 ## 설치
 
 ```bash
-git clone https://github.com/cskwork/superqa-skill ~/.claude/skills/browser-qa
+git clone https://github.com/cskwork/browser-qa ~/.claude/skills/browser-qa
 cd ~/.claude/skills/browser-qa
 pip3 install textual playwright pyyaml && python3 -m playwright install chromium
 # 선택: pip3 install -e .   ->  `superqa` 명령 사용 가능
@@ -58,7 +58,7 @@ bash scripts/superqa.sh              # 또는 터미널 TUI
 녹화·에이전트 생성 시나리오 전부를 의존성 DAG와 실행 버튼으로 보여주고, 실시간 진행·
 실행 이력·리포트 열람까지 됩니다. TUI/CLI와 같은 데이터를 공유합니다.
 
-- `n` - 기록: 크롬 창이 열리고 우측 하단에 SuperQA 패널이 뜹니다. 평소처럼
+- `n` - 기록: 크롬 창이 열리고 우측 하단에 browser-qa 패널이 뜹니다. 평소처럼
   클릭하면 각 클릭/입력이 단계가 됩니다. 비밀번호는 평문이 아닌 `{{password}}`로
   저장됩니다. "저장 후 종료"를 누르면 끝.
 - `r` - 선택한 시나리오 실행(브라우저가 재현하는 것을 지켜볼 수 있음).
@@ -146,7 +146,7 @@ dag:
 탐색용 브라우저 엔진은 설치된 것 중 최선을 자동 선택합니다: macOS에서는
 ego-browser(ego-lite) 우선, 다음 Playwright MCP, `playwright-cli`, 기타 드라이버
 순서 ([reference/engines.md](reference/engines.md)). 결정적 재생과 리포트는
-항상 SuperQA 엔진이 담당합니다.
+항상 browser-qa 엔진이 담당합니다.
 
 ## 사이트 정보는 로컬에만
 

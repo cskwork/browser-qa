@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SuperQA - 누구나 쓰는 브라우저 QA</title>
+<title>browser-qa - 누구나 쓰는 브라우저 QA</title>
 <meta name="description" content="어떤 웹사이트든 클릭으로 기록하고, 한 줄로 실행하고, 사람의 언어로 리포트를 받는 브라우저 QA. Claude Code 스킬 + Textual TUI.">
 <style>
 :root{
@@ -109,7 +109,7 @@ footer{border-top:1px solid var(--line);padding:36px 0;color:var(--muted);font-s
       <a href="#features">기능</a>
       <a href="#agent">Claude Code 스킬</a>
       <a href="#install">설치</a>
-      <a href="https://github.com/cskwork/superqa-skill">GitHub</a>
+      <a href="https://github.com/cskwork/browser-qa">GitHub</a>
     </nav>
   </div>
 </header>
@@ -126,7 +126,7 @@ footer{border-top:1px solid var(--line);padding:36px 0;color:var(--muted);font-s
       </p>
       <div class="cta">
         <a class="btn btn-primary" href="#install">시작하기</a>
-        <a class="btn btn-ghost" href="https://github.com/cskwork/superqa-skill">GitHub 보기</a>
+        <a class="btn btn-ghost" href="https://github.com/cskwork/browser-qa">GitHub 보기</a>
       </div>
       <p class="hero-note">Claude Code 스킬 + Textual TUI + CLI · Python 3.10+ · MIT</p>
     </div>
@@ -151,7 +151,7 @@ footer{border-top:1px solid var(--line);padding:36px 0;color:var(--muted);font-s
     <div class="steps">
       <div class="step"><b class="no">1</b>
         <h3>클릭으로 기록</h3>
-        <p>실제 크롬 창에 SuperQA 패널이 뜹니다. 사이트를 평소처럼 클릭하면
+        <p>실제 크롬 창에 browser-qa 패널이 뜹니다. 사이트를 평소처럼 클릭하면
         각 동작이 "'로그인' 버튼 클릭" 같은 우리말 단계로 저장됩니다.
         비밀번호는 평문 대신 <code>{{password}}</code>로 기록됩니다.</p>
       </div>
@@ -170,7 +170,7 @@ footer{border-top:1px solid var(--line);padding:36px 0;color:var(--muted);font-s
 
   <section id="features">
     <h2>흐름이 통과해도, 문제는 드러난다</h2>
-    <p class="sub">SuperQA는 시나리오 단계만 보지 않습니다. 실행 내내 브라우저 전체(팝업 포함)를 감시합니다.</p>
+    <p class="sub">browser-qa는 시나리오 단계만 보지 않습니다. 실행 내내 브라우저 전체(팝업 포함)를 감시합니다.</p>
     <div class="grid">
       <div class="card"><h3>부작용 자동 감지</h3>
         <p>콘솔 오류, 미처리 JS 예외, 실패한 요청, HTTP 4xx/5xx를 단계 번호와 함께 기록.
@@ -240,7 +240,7 @@ steps:
     <p class="sub">2분이면 첫 QA를 돌릴 수 있습니다.</p>
     <div class="code">
 <span class="c"># 1. 받기 (Claude Code 스킬 위치에 그대로)</span>
-git clone https://github.com/cskwork/superqa-skill ~/.claude/skills/browser-qa
+git clone https://github.com/cskwork/browser-qa ~/.claude/skills/browser-qa
 
 <span class="c"># 2. 의존성</span>
 pip3 install textual playwright pyyaml
@@ -257,8 +257,8 @@ bash ~/.claude/skills/browser-qa/scripts/superqa.sh     <span class="c"># 또는
 
 <footer>
   <div class="wrap foot">
-    <div>SuperQA · MIT License</div>
-    <div><a href="https://github.com/cskwork/superqa-skill">github.com/cskwork/superqa-skill</a></div>
+    <div>browser-qa · MIT License</div>
+    <div><a href="https://github.com/cskwork/browser-qa">github.com/cskwork/browser-qa</a></div>
   </div>
 </footer>
 
