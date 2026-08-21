@@ -3,264 +3,408 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>browser-qa - 누구나 쓰는 브라우저 QA</title>
-<meta name="description" content="어떤 웹사이트든 클릭으로 기록하고, 한 줄로 실행하고, 사람의 언어로 리포트를 받는 브라우저 QA. Claude Code 스킬 + Textual TUI.">
+<title>browser-qa — 통과했다는 증거를 남기는 브라우저 QA</title>
+<meta name="description" content="브라우저 QA 도구. 클릭으로 시나리오를 기록하고, 매번 같은 순서로 재생하고, 단계별 화면·API 응답·오류가 담긴 리포트를 남깁니다.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23121310'/><rect x='6' y='9' width='20' height='14' fill='%23E9E9E4'/><circle cx='16' cy='16' r='4' fill='none' stroke='%23E0350E' stroke-width='2'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Archivo+Black&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
 <style>
 :root{
-  --bg:#0b1220; --bg2:#111a2c; --panel:#16213a; --line:#243250;
-  --text:#e6edf7; --muted:#9fb0c7; --accent:#34d399; --accent-dark:#065f46;
-  --fail:#f87171; --radius:14px;
-  --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;
+  --paper:#E9E9E4; --paper-2:#DFDFD8; --rebate:#121310; --ink:#1A1B18;
+  --pencil:#E0350E; --archival:#1B3A6B; --dim:#5E605A; --rule:#C6C6BE;
+  --sans:"Archivo","Pretendard",system-ui,sans-serif;
+  --ko:"Pretendard","Archivo",system-ui,sans-serif;
+  --display:"Archivo Black","Pretendard",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --edge:0.68rem;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-@media (prefers-reduced-motion: reduce){
-  html{scroll-behavior:auto}
-  *,*::before,*::after{animation:none!important;transition:none!important}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+  font-size:17px;line-height:1.62;font-feature-settings:"tnum" 0}
+html[lang="ko"] body{font-family:var(--ko)}
+html[lang="ko"] h1,html[lang="ko"] h2,html[lang="ko"] h3,
+html[lang="ko"] p,html[lang="ko"] li,html[lang="ko"] .lede{word-break:keep-all;overflow-wrap:break-word}
+::selection{background:var(--pencil);color:var(--paper)}
+:focus-visible{outline:2px solid var(--pencil);outline-offset:3px}
+*{scrollbar-color:var(--rebate) var(--paper-2);scrollbar-width:thin}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:var(--paper-2)}
+::-webkit-scrollbar-thumb{background:var(--rebate)}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:-0.035em;
+  text-wrap:balance;margin:0;line-height:1.02}
+html[lang="ko"] h1,html[lang="ko"] h2,html[lang="ko"] h3{font-family:var(--ko);font-weight:800}
+p,figure,figcaption{margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+/* ---- film rebate: the black band that owns the top and bottom ---- */
+.rebate{background:var(--rebate);color:var(--paper)}
+.rebate-strip{display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding-top:11px;padding-bottom:11px;font-family:var(--mono);font-size:var(--edge);letter-spacing:0.13em;
+  text-transform:uppercase;color:#8C8E86}
+.rebate-strip b{color:var(--paper);font-weight:500}
+.perf{display:flex;gap:7px;align-items:center}
+.perf i{display:block;width:11px;height:8px;background:#2C2E28;border-radius:1.5px}
+
+/* ---- language toggle: a stamped chip ---- */
+.lang{display:inline-flex;border:1.5px solid var(--paper);font-family:var(--mono);
+  font-size:var(--edge);letter-spacing:0.1em}
+.lang button{appearance:none;background:none;border:0;color:#8C8E86;cursor:pointer;
+  padding:4px 10px;font:inherit;letter-spacing:inherit}
+.lang button[aria-pressed="true"]{background:var(--paper);color:var(--rebate)}
+
+/* ---- hero ---- */
+.hero{padding-top:66px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);gap:56px;align-items:start}
+h1{font-size:clamp(2.1rem,4.5vw,3.5rem)}
+html[lang="ko"] h1{font-size:clamp(1.95rem,4vw,3.1rem);line-height:1.2}
+.lede{margin-top:26px;max-width:34ch;font-size:1.12rem;color:#33352F}
+.acts{margin-top:34px;display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-block;padding:15px 26px;font-family:var(--mono);font-size:0.82rem;
+  letter-spacing:0.11em;text-transform:uppercase;text-decoration:none;
+  border:1.5px solid var(--rebate);transition:transform .18s cubic-bezier(.16,1,.3,1),
+  background-color .18s,color .18s}
+.btn-p{background:var(--rebate);color:var(--paper)}
+.btn-p:hover{background:var(--pencil);border-color:var(--pencil);transform:translateY(-2px)}
+.btn-s:hover{background:var(--rebate);color:var(--paper);transform:translateY(-2px)}
+
+/* ---- contact sheet: the artifact itself ---- */
+.sheet{background:var(--rebate);padding:16px 16px 12px}
+.sheet-head{display:flex;justify-content:space-between;font-family:var(--mono);
+  font-size:var(--edge);letter-spacing:0.11em;color:#8C8E86;padding:0 2px 11px;text-transform:uppercase}
+.frames{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.fr{position:relative;margin:0;background:var(--paper);padding:7px 7px 5px}
+.fr svg{display:block;width:100%;height:auto}
+.fr .n{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.02em;color:var(--dim);
+  display:grid;grid-template-columns:auto 1fr;gap:1px 5px;padding-top:6px;align-items:baseline}
+.fr .n>*{min-width:0}
+.fr .n .st{text-align:right;white-space:nowrap}
+.fr .n .lab{grid-column:1/-1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:#7A7C74}
+html[lang="ko"] .fr .n .lab{font-family:var(--ko)}
+.fr .st{font-weight:500}
+.fr[data-st="pass"] .st{color:var(--archival)}
+.fr[data-st="fail"] .st{color:var(--pencil)}
+.fr[data-mark]::after{content:"";position:absolute;inset:-5px;border:2.5px solid var(--pencil);
+  border-radius:52% 48% 50% 50%/49% 51% 49% 51%;transform:rotate(-1.6deg);pointer-events:none}
+.sheet-foot{font-family:var(--mono);font-size:var(--edge);color:#8C8E86;
+  letter-spacing:0.09em;padding-top:11px;display:flex;justify-content:space-between}
+.sheet-foot b{color:var(--paper);font-weight:500}
+
+/* ---- ruled sections (no card grids) ---- */
+section{padding:88px 0}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:24px;
+  border-bottom:2px solid var(--rebate);padding-bottom:13px;margin-bottom:0}
+.sec-h h2{font-size:clamp(1.55rem,2.9vw,2.3rem)}
+.sec-h .tag{font-family:var(--mono);font-size:var(--edge);letter-spacing:0.13em;
+  text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.rows{border-top:0}
+.row{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:34px;
+  padding:26px 0;border-bottom:1px solid var(--rule)}
+.row h3{font-size:1.06rem;letter-spacing:-0.01em}
+.row p{color:#3B3D37}
+.row .path{font-family:var(--mono);font-size:0.79rem;color:var(--dim);margin-top:9px;word-break:break-all}
+
+/* ---- code ---- */
+pre{margin:22px 0 0;background:var(--rebate);color:#D8D9D2;padding:24px 26px;
+  overflow-x:auto;font-family:var(--mono);font-size:0.85rem;line-height:1.85}
+pre .c{color:#7C7E76}
+pre .k{color:#F1A48C}
+
+/* ---- watch strip ---- */
+.watch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);margin-top:30px}
+.watch>div{background:var(--paper);padding:24px}
+.watch h3{font-size:0.98rem;margin-bottom:9px}
+.watch p{font-size:0.94rem;color:#3B3D37}
+
+footer{padding:26px 0}
+.foot{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:var(--edge);letter-spacing:0.11em;
+  text-transform:uppercase;color:#8C8E86}
+.foot a{color:var(--paper);text-decoration:none;text-underline-offset:4px}
+.foot a:hover{text-decoration:underline;text-decoration-color:var(--pencil)}
+
+[data-l]{display:none}
+html[lang="ko"] [data-l="ko"],html[lang="en"] [data-l="en"]{display:inline}
+html[lang="ko"] p[data-l="ko"],html[lang="en"] p[data-l="en"],
+html[lang="ko"] h1[data-l="ko"],html[lang="en"] h1[data-l="en"],
+html[lang="ko"] h2[data-l="ko"],html[lang="en"] h2[data-l="en"],
+html[lang="ko"] h3[data-l="ko"],html[lang="en"] h3[data-l="en"],
+html[lang="ko"] div[data-l="ko"],html[lang="en"] div[data-l="en"]{display:block}
+html[lang="ko"] .lab[data-l="ko"],html[lang="en"] .lab[data-l="en"]{display:block}
+
+/* ---- the one authored moment: frames develop in sequence ---- */
+@media (prefers-reduced-motion:no-preference){
+  .fr{opacity:0;filter:blur(7px);animation:develop .82s cubic-bezier(.16,1,.3,1) forwards;
+    animation-delay:calc(var(--i)*70ms + 180ms)}
+  @keyframes develop{to{opacity:1;filter:blur(0)}}
 }
-body{
-  font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',
-    'Segoe UI',sans-serif;
-  background:var(--bg);color:var(--text);line-height:1.65;
+
+@media (max-width:940px){
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .lede{max-width:none}
+  .row{grid-template-columns:1fr;gap:8px}
+  .watch{grid-template-columns:1fr}
+  section{padding:64px 0}
 }
-.wrap{max-width:1060px;margin:0 auto;padding:0 24px}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
-
-/* header */
-header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,18,32,.92);
-  backdrop-filter:blur(8px);z-index:10}
-.nav{display:flex;align-items:center;justify-content:space-between;height:60px}
-.logo{font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--text)}
-.logo span{color:var(--accent)}
-.nav-links{display:flex;gap:22px;font-size:14px}
-.nav-links a{color:var(--muted);white-space:nowrap}
-.nav-links a:hover{color:var(--text);text-decoration:none}
-@media(max-width:720px){.nav-links a:not(:last-child){display:none}}
-
-/* hero */
-.hero{padding:88px 0 56px;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
-@media(max-width:880px){.hero{grid-template-columns:1fr;padding:56px 0 32px}}
-.hero h1{font-size:clamp(30px,4.6vw,46px);line-height:1.22;letter-spacing:-.03em;font-weight:800}
-.hero h1 em{color:var(--accent);font-style:normal}
-.hero p.lead{margin:18px 0 30px;color:var(--muted);font-size:17px;max-width:34em}
-.cta{display:flex;gap:12px;flex-wrap:wrap}
-.btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:700;font-size:15px}
-.btn-primary{background:var(--accent);color:#04241a}
-.btn-primary:hover{background:#4ade80;text-decoration:none}
-.btn-ghost{border:1px solid var(--line);color:var(--text)}
-.btn-ghost:hover{border-color:var(--accent);text-decoration:none}
-.hero-note{margin-top:14px;font-size:13px;color:var(--muted)}
-
-/* terminal mock */
-.term{background:#0a0f1a;border:1px solid var(--line);border-radius:var(--radius);
-  box-shadow:0 24px 60px rgba(0,0,0,.45);overflow:hidden;font-family:var(--mono);font-size:12.5px}
-.term-bar{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--bg2)}
-.dot{width:10px;height:10px;border-radius:50%;background:#2c3a57}
-.dot:first-child{background:#f87171}.dot:nth-child(2){background:#fbbf24}.dot:nth-child(3){background:#34d399}
-.term pre{padding:16px 18px;overflow-x:auto;line-height:1.7;color:#c7d4e8}
-.t-cmd{color:#e6edf7;font-weight:700}
-.t-pass{color:var(--accent);font-weight:700}
-.t-warn{color:#fbbf24}
-.t-dim{color:#64748b}
-
-/* sections */
-section{padding:64px 0;border-top:1px solid var(--line)}
-h2{font-size:26px;letter-spacing:-.02em;margin-bottom:8px}
-.sub{color:var(--muted);margin-bottom:36px;max-width:44em}
-
-/* steps */
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-@media(max-width:760px){.steps{grid-template-columns:1fr}}
-.step{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
-.step b.no{display:inline-flex;width:28px;height:28px;border-radius:8px;background:var(--accent-dark);
-  color:var(--accent);align-items:center;justify-content:center;font-size:14px;margin-bottom:12px}
-.step h3{font-size:17px;margin-bottom:8px}
-.step p{color:var(--muted);font-size:14px}
-
-/* features */
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-@media(max-width:880px){.grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.grid{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
-.card h3{font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.card h3 svg{flex:none}
-.card p{color:var(--muted);font-size:13.5px}
-
-/* code blocks */
-.code{background:#0a0f1a;border:1px solid var(--line);border-radius:var(--radius);
-  padding:18px 20px;font-family:var(--mono);font-size:13px;overflow-x:auto;line-height:1.8;color:#c7d4e8}
-.code .c{color:#64748b}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
-@media(max-width:820px){.two-col{grid-template-columns:1fr}}
-
-/* footer */
-footer{border-top:1px solid var(--line);padding:36px 0;color:var(--muted);font-size:13.5px}
-.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media (max-width:560px){
+  .frames{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rebate-strip{font-size:0.6rem;letter-spacing:0.08em}
+  .perf{display:none}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="wrap nav">
-    <div class="logo">Super<span>QA</span></div>
-    <nav class="nav-links">
-      <a href="#how">사용법</a>
-      <a href="#features">기능</a>
-      <a href="#agent">Claude Code 스킬</a>
-      <a href="#install">설치</a>
-      <a href="https://github.com/cskwork/browser-qa">GitHub</a>
-    </nav>
+<!--
+THESIS: browser-qa's product is the evidence strip a run leaves behind, not a green
+checkmark. This page shows that artifact first and refuses the category's feature-card
+grid and terminal-hero template.
+OWN-WORLD: A photographic contact sheet. Cool paper ground, film-rebate black owning
+whole bands, grease-pencil vermilion for marks and failures, archival blue for passes.
+Archivo / Archivo Black with Pretendard for Korean, JetBrains Mono only where there is
+real code or measurement. Rules and strips, never cards.
+STORY: The visitor sees eight numbered frames of one real run, one circled in red, and
+understands this tool hands back reviewable proof; then that a non-developer can record
+it by clicking; then installs.
+FIRST VIEWPORT: Rebate band with edge lettering and the KO/EN stamp across the top. Below
+on paper, headline left at 4.35rem with the primary Install action directly beneath it;
+right, the contact sheet on black, eight authored frames, statuses stamped, frame 06
+circled in grease pencil.
+FORM: Contact sheet; ranked 2 of 7 derived candidates. concept-seed.mjs produced no
+output in this environment, so no seed key exists and the direction was derived by hand.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+
+<header class="rebate">
+  <div class="wrap rebate-strip">
+    <b>BROWSER-QA</b>
+    <span class="perf" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    <span data-l="ko">MIT 라이선스 · CSKWORK</span><span data-l="en">MIT LICENSE · CSKWORK</span>
+    <span class="lang" role="group" aria-label="Language">
+      <button type="button" data-set="ko" aria-pressed="true">KO</button><button type="button" data-set="en" aria-pressed="false">EN</button>
+    </span>
   </div>
 </header>
 
-<main class="wrap">
-
-  <div class="hero">
+<main>
+<div class="wrap hero">
+  <div class="hero-grid">
     <div>
-      <h1>어떤 사이트든,<br>누구나 하는 <em>브라우저 QA</em></h1>
-      <p class="lead">
-        클릭만 하면 테스트가 기록되고, 한 줄이면 전체 회귀가 돌아갑니다.
-        콘솔 오류·깨진 요청·예상 밖 팝업까지 자동으로 찾아내고,
-        리포트는 비개발자도 읽는 우리말 문장으로 나옵니다.
-      </p>
-      <div class="cta">
-        <a class="btn btn-primary" href="#install">시작하기</a>
-        <a class="btn btn-ghost" href="https://github.com/cskwork/browser-qa">GitHub 보기</a>
+      <h1 data-l="ko">통과했다고 말하는 대신,<br>통과한 증거를 남깁니다</h1>
+      <h1 data-l="en">It doesn't tell you it passed.<br>It hands you the proof.</h1>
+      <p class="lede" data-l="ko">브라우저 QA 도구입니다. 사이트를 평소처럼 클릭하면 시나리오가 기록되고,
+        그 시나리오를 매번 같은 순서로 다시 돌립니다. 끝나면 단계마다 화면, 그 화면이 부른 API와 응답,
+        그리고 그 사이에 난 오류가 담긴 리포트 하나가 남습니다. 개발자가 아니어도 씁니다.</p>
+      <p class="lede" data-l="en">A browser QA tool. Click through your site the way you normally would and it
+        records a scenario; it then replays that scenario the same way every time. What you get back is one
+        report: the screen at every step, the APIs that screen called and what they returned, and every error
+        in between. You do not need to be a developer to use it.</p>
+      <div class="acts">
+        <a class="btn btn-p" href="#install"><span data-l="ko">설치하기</span><span data-l="en">Install</span></a>
+        <a class="btn btn-s" href="https://github.com/cskwork/browser-qa">GitHub</a>
       </div>
-      <p class="hero-note">Claude Code 스킬 + Textual TUI + CLI · Python 3.10+ · MIT</p>
     </div>
-    <div class="term" role="img" aria-label="superqa 실행 결과 터미널 예시">
-      <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-      <pre>$ <span class="t-cmd">superqa run --all --site myshop --headless</span>
-실행: 로그인-정상 (myshop)
-  [1] 사이트 접속 ... <span class="t-pass">성공</span>
-  [2] 아이디 입력 ... <span class="t-pass">성공</span>
-  [3] 로그인 버튼 클릭 ... <span class="t-pass">성공</span>
-  [4] 환영 문구 확인 ... <span class="t-pass">성공</span>
-      <span class="t-warn">!! http_error: 500 /api/recommend</span>
-결과: <span class="t-pass">성공</span> | 4단계 성공 · <span class="t-warn">부작용 1건 감지</span>
-리포트: ~/.superqa/reports/…/report.html
-<span class="t-dim">전체 결과: 3/3 성공 · exit 0</span></pre>
+
+    <div class="sheet">
+      <div class="sheet-head">
+        <span data-l="ko">실행 기록 — 로그인 · 장바구니</span><span data-l="en">RUN — LOGIN &amp; CART</span>
+        <span>8 / 8</span>
+      </div>
+      <div class="frames" id="frames"></div>
+      <div class="sheet-foot">
+        <span><b>6</b> <span data-l="ko">통과</span><span data-l="en">PASS</span> · <b>1</b> <span data-l="ko">실패</span><span data-l="en">FAIL</span> · <b>1</b> <span data-l="ko">부작용</span><span data-l="en">SIDE EFFECT</span></span>
+        <span data-l="ko">예시 실행</span><span data-l="en">SAMPLE RUN</span>
+      </div>
     </div>
   </div>
+</div>
 
-  <section id="how">
-    <h2>세 단계면 끝</h2>
-    <p class="sub">코드도, 셀레늄 강의도 필요 없습니다. 브라우저를 평소처럼 쓰는 것이 곧 테스트 작성입니다.</p>
-    <div class="steps">
-      <div class="step"><b class="no">1</b>
-        <h3>클릭으로 기록</h3>
-        <p>실제 크롬 창에 browser-qa 패널이 뜹니다. 사이트를 평소처럼 클릭하면
-        각 동작이 "'로그인' 버튼 클릭" 같은 우리말 단계로 저장됩니다.
-        비밀번호는 평문 대신 <code>{{password}}</code>로 기록됩니다.</p>
+<div class="wrap">
+  <section>
+    <div class="sec-h">
+      <h2 data-l="ko">한 번 돌리면 무엇이 남나</h2>
+      <h2 data-l="en">What one run leaves behind</h2>
+      <span class="tag" data-l="ko">산출물</span><span class="tag" data-l="en">Artifacts</span>
+    </div>
+    <div class="rows">
+      <div class="row">
+        <h3 data-l="ko">단계별 화면과 판정</h3><h3 data-l="en">A screen and a verdict per step</h3>
+        <div>
+          <p data-l="ko">단계마다 스크린샷 한 장과 성공·실패 표시가 붙은 HTML 리포트. 링크 하나로 누구에게든 그대로 보냅니다.</p>
+          <p data-l="en">One HTML report with a screenshot and a pass or fail mark for every step. Send the link to anyone as it is.</p>
+          <div class="path">~/.superqa/reports/&lt;stamp&gt;-&lt;name&gt;/report.html</div>
+        </div>
       </div>
-      <div class="step"><b class="no">2</b>
-        <h3>실행·스케줄</h3>
-        <p>TUI에서 키 하나로 실행하거나, <code>superqa run --all</code>로 전체 회귀를 돌립니다.
-        N분마다 자동 실행하는 스케줄과 CI용 headless 모드도 내장.</p>
+      <div class="row">
+        <h3 data-l="ko">화면이 부른 API와 응답 본문</h3><h3 data-l="en">The APIs the screen called, and what came back</h3>
+        <div>
+          <p data-l="ko">요청 URL과 상태코드만이 아니라 응답 본문까지 남깁니다. "화면은 멀쩡한데 값이 틀리다"를 프런트 문제인지 서버 문제인지 가릅니다.</p>
+          <p data-l="en">Not just the URL and the status code but the response body. That is what settles "the screen looks fine but the number is wrong" as a frontend problem or a server one.</p>
+        </div>
       </div>
-      <div class="step"><b class="no">3</b>
-        <h3>리포트 받기</h3>
-        <p>단계별 스크린샷, 성공/실패 배지, 부작용 표가 담긴 단일 HTML.
-        한국어·영어 내장, 누구에게든 그대로 전달하면 됩니다.</p>
+      <div class="row">
+        <h3 data-l="ko">시나리오 밖에서 난 일</h3><h3 data-l="en">Everything that happened outside the script</h3>
+        <div>
+          <p data-l="ko">콘솔 오류, 처리 안 된 JS 예외, 실패한 요청, HTTP 4xx·5xx, 예상 못 한 팝업과 새 탭. 같은 것은 횟수로 묶고, 직전 실행에 없던 유형은 회귀 신호로 표시합니다.</p>
+          <p data-l="en">Console errors, unhandled JS exceptions, failed requests, HTTP 4xx and 5xx, popups and tabs nobody expected. Repeats collapse into counts, and any type that was not in the previous run is flagged as a regression signal.</p>
+        </div>
+      </div>
+      <div class="row">
+        <h3 data-l="ko">실패한 순간의 되감기</h3><h3 data-l="en">A rewind of the moment it broke</h3>
+        <div>
+          <p data-l="ko">실패한 실행은 trace로 남아 그 시점을 다시 열어볼 수 있습니다. 기준 화면을 정해두면 매 실행 스크린샷을 픽셀 비교해 레이아웃 변화를 붉은 diff로 보여줍니다.</p>
+          <p data-l="en">A failed run keeps a trace you can reopen at that exact point. Adopt a baseline screenshot and every later run is compared pixel by pixel, with layout drift shown as a red diff.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <section id="features">
-    <h2>흐름이 통과해도, 문제는 드러난다</h2>
-    <p class="sub">browser-qa는 시나리오 단계만 보지 않습니다. 실행 내내 브라우저 전체(팝업 포함)를 감시합니다.</p>
-    <div class="grid">
-      <div class="card"><h3>부작용 자동 감지</h3>
-        <p>콘솔 오류, 미처리 JS 예외, 실패한 요청, HTTP 4xx/5xx를 단계 번호와 함께 기록.
-        중복은 횟수로 합치고 알려진 노이즈는 분리해, 진짜 결함만 눈에 띕니다.</p></div>
-      <div class="card"><h3>팝업·다이얼로그 완전 대응</h3>
-        <p>alert/confirm/prompt는 정책대로 자동 처리, 새 탭·팝업은 자동으로 따라가서
-        그 안에서 검증을 계속합니다. 이중 새 탭 체인도 문제없습니다.</p></div>
-      <div class="card"><h3>계정 저장소 + 마스킹</h3>
-        <p>아이디/비밀번호는 SQLite에 한 번만 저장하고 시나리오에선 <code>{{username}}</code>으로 참조.
-        비밀값은 모든 리포트와 오류 메시지에서 자동 마스킹됩니다.</p></div>
-      <div class="card"><h3>기능 완료 후 회귀 테스트</h3>
-        <p>실행할 때마다 직전 실행과 자동 비교해 새 실패·새 부작용 유형만 짚어주고,
-        변화가 없으면 "회귀 없음" 판정. exit code로 CI 게이트도 됩니다.</p></div>
-      <div class="card"><h3>화면 변화 감지 + 실패 리플레이</h3>
-        <p>기준선을 채택하면 매 실행 스크린샷을 픽셀 비교해 레이아웃 변화가 빨간
-        diff 이미지로 표시. 실패한 실행은 trace.zip으로 그 순간을 되돌려봅니다.</p></div>
-      <div class="card"><h3>클릭으로 실행하는 웹 admin</h3>
-        <p><code>superqa serve</code>로 브라우저 대시보드를 엽니다. 녹화·에이전트
-        생성 시나리오를 실행 버튼 하나로 돌리고, 진행·이력·리포트를 한 화면에서 봅니다.</p></div>
-      <div class="card"><h3>API 요청·응답까지 증거로</h3>
-        <p>화면이 실제로 호출한 API를 상태코드와 <b>응답 본문</b>까지 남깁니다.
-        "화면은 멀쩡한데 값이 틀리다"를 프런트/백 어디 문제인지 가려냅니다.</p></div>
-      <div class="card"><h3>목적에 맞는 엔진 선택</h3>
-        <p>응답 본문·팝업·윈도우 지원 여부로 엔진을 고릅니다. 한 페이지엔 엔진 하나 —
-        섞으면 네트워크 기록이 비는 함정까지 규칙으로 박아뒀습니다.</p></div>
-      <div class="card"><h3>사이트 정보는 로컬에만</h3>
-        <p>시나리오·계정·사이트 규칙은 전부 <code>~/.superqa/</code>에 저장.
-        저장소에는 어떤 사이트 정보도 커밋되지 않습니다.</p></div>
+  <section>
+    <div class="sec-h">
+      <h2 data-l="ko">쓰는 방법은 세 가지</h2>
+      <h2 data-l="en">Three ways in</h2>
+      <span class="tag" data-l="ko">사용법</span><span class="tag" data-l="en">Usage</span>
+    </div>
+    <div class="rows">
+      <div class="row">
+        <h3 data-l="ko">클릭해서 기록하기</h3><h3 data-l="en">Record it by clicking</h3>
+        <div>
+          <p data-l="ko">실제 크롬 창이 열리고, 사이트를 평소처럼 씁니다. 화면 구석 패널에서 잠시 멈추거나 확인할 내용을 덧붙이고 저장하면 끝. 입력한 비밀번호는 평문이 아니라 <code>{{password}}</code>로 저장됩니다.</p>
+          <p data-l="en">A real Chrome window opens and you use the site as usual. A small panel lets you pause, add something to check, and save. A password you type is stored as <code>{{password}}</code>, never as plain text.</p>
+        </div>
+      </div>
+      <div class="row">
+        <h3 data-l="ko">에이전트에게 맡기기</h3><h3 data-l="en">Hand it to an agent</h3>
+        <div>
+          <p data-l="ko">"이 사이트 QA해줘" 한 줄이면 됩니다. 에이전트가 사이트를 돌아다니며 메뉴·로그인·팝업을 파악하고, 해피패스와 오류 경로 시나리오를 직접 써서 돌린 뒤, 결과를 우리말로 정리해 리포트 경로와 함께 보고합니다.</p>
+          <p data-l="en">One line — "QA this site" — is enough. The agent explores it, maps the menus, login and popups, writes happy-path and error-path scenarios itself, runs them, then reports back in your language with the report path.</p>
+        </div>
+      </div>
+      <div class="row">
+        <h3 data-l="ko">CLI와 CI</h3><h3 data-l="en">CLI and CI</h3>
+        <div>
+          <p data-l="ko">저장된 시나리오 전체를 헤드리스로 돌리고 종료 코드로 파이프라인을 막습니다. 같은 시나리오를 스테이징이나 로컬 스택으로 돌릴 때는 주소만 바꿔 넘깁니다.</p>
+          <p data-l="en">Run every saved scenario headless and gate the pipeline on the exit code. Point the same scenarios at staging or a local stack by passing a different base URL.</p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section id="agent">
-    <h2>Claude Code 스킬로 쓰면</h2>
-    <p class="sub">스킬 이름은 <code>browser-qa</code>. "이 사이트 QA해줘" 한 줄이면 에이전트가 사이트를 탐색해 시나리오 케이스를 직접 설계하고, 실행하고, 결과를 분류해 보고합니다.</p>
-    <div class="two-col">
-      <div class="code">
-<span class="c"># 사용자</span>
-"https://myshop.example.com QA해줘"
-
-<span class="c"># 에이전트가 하는 일</span>
-1. 캐스케이드로 엔진 선택 후 사이트 탐색 (메뉴·로그인·팝업 매핑)
-2. 해피패스/검증/오류/엣지 시나리오 YAML 생성
-3. superqa run --all --headless 로 결정적 실행
-4. 부작용 분류: 버그 후보 / 알려진 동작 / 환경 노이즈
-5. 우리말 요약 + 리포트 경로 보고
+  <section>
+    <div class="sec-h">
+      <h2 data-l="ko">두 가지는 양보하지 않습니다</h2>
+      <h2 data-l="en">Two things it will not trade away</h2>
+      <span class="tag" data-l="ko">원칙</span><span class="tag" data-l="en">Principles</span>
+    </div>
+    <div class="watch">
+      <div>
+        <h3 data-l="ko">사이트 정보는 로컬에만</h3><h3 data-l="en">Site knowledge stays on your machine</h3>
+        <p data-l="ko">진입 주소, 계정, 로그인 요령, 시나리오는 전부 <code>~/.superqa/</code>에 있습니다. 저장소에는 어떤 사이트 정보도 올라가지 않습니다.</p>
+        <p data-l="en">Entry URLs, accounts, login quirks and scenarios all live under <code>~/.superqa/</code>. No site data is ever committed to the repository.</p>
       </div>
-      <div class="code">
-<span class="c"># 시나리오는 사람이 읽는 YAML</span>
-name: 로그인-정상
-site: myshop
-language: ko
-policy: { dialogs: accept, popups: follow }
-steps:
-  - action: fill
-    selector: "#username"
-    value: "{{username}}"
-    description: 아이디 입력
-  - action: click
-    selector: { role: button, name: 로그인 }
-    description: 로그인 버튼 클릭
+      <div>
+        <h3 data-l="ko">비밀값은 자동 가려짐</h3><h3 data-l="en">Secrets mask themselves</h3>
+        <p data-l="ko">아이디와 비밀번호는 한 번만 저장하고 시나리오에서는 이름으로만 참조합니다. 비밀값처럼 보이는 키는 모든 리포트와 오류 메시지에서 자동으로 가려집니다.</p>
+        <p data-l="en">Store a username and password once and scenarios reference them by name. Anything that looks like a secret is masked in every report and error message automatically.</p>
+      </div>
+      <div>
+        <h3 data-l="ko">브라우저는 목적에 맞게</h3><h3 data-l="en">The browser is chosen for the job</h3>
+        <p data-l="ko">기본은 agent-browser입니다. 팝업과 새 창을 따라가고 API 응답 본문까지 남기며 macOS·Linux·Windows에서 그대로 돕니다. 깊은 네트워크 추적이 필요하면 Chrome DevTools로 넘어갑니다.</p>
+        <p data-l="en">agent-browser by default: it follows popups and new windows, keeps API response bodies, and runs natively on macOS, Linux and Windows. For deeper network work it hands over to Chrome DevTools.</p>
       </div>
     </div>
   </section>
 
   <section id="install">
-    <h2>설치</h2>
-    <p class="sub">2분이면 첫 QA를 돌릴 수 있습니다.</p>
-    <div class="code">
-<span class="c"># 1. 받기 (Claude Code 스킬 위치에 그대로)</span>
-git clone https://github.com/cskwork/browser-qa ~/.claude/skills/browser-qa
+    <div class="sec-h">
+      <h2 data-l="ko">설치</h2><h2 data-l="en">Install</h2>
+      <span class="tag">MIT · GITHUB.COM/CSKWORK/BROWSER-QA</span>
+    </div>
+    <div data-l="ko">
+<pre><span class="c"># Claude Code 플러그인으로</span>
+<span class="k">claude</span> plugin marketplace add cskwork/browser-qa
+<span class="k">claude</span> plugin install browser-qa@browser-qa
+<span class="c"># 새 세션에서 /browser-qa</span>
 
-<span class="c"># 2. 의존성</span>
-pip3 install textual playwright pyyaml
-python3 -m playwright install chromium
+<span class="c"># 또는 직접 받아서</span>
+<span class="k">git</span> clone https://github.com/cskwork/browser-qa ~/.claude/skills/browser-qa
+<span class="k">pip3</span> install textual playwright pyyaml
+<span class="k">python3</span> -m playwright install chromium
 
-<span class="c"># 3. 실행</span>
-python3 -m superqa_tui serve                         <span class="c"># 웹 admin (클릭 실행)</span>
-bash ~/.claude/skills/browser-qa/scripts/superqa.sh     <span class="c"># 또는 터미널 TUI</span>
-<span class="c"># 또는: pip3 install -e ~/.claude/skills/browser-qa  ->  superqa 명령 사용</span>
+<span class="c"># 실행 — 웹 대시보드에서 버튼으로 돌리기</span>
+<span class="k">python3</span> -m superqa_tui serve
+<span class="c"># 또는 터미널 TUI</span>
+<span class="k">bash</span> ~/.claude/skills/browser-qa/scripts/superqa.sh</pre>
+    </div>
+    <div data-l="en">
+<pre><span class="c"># As a Claude Code plugin</span>
+<span class="k">claude</span> plugin marketplace add cskwork/browser-qa
+<span class="k">claude</span> plugin install browser-qa@browser-qa
+<span class="c"># then type /browser-qa in a new session</span>
+
+<span class="c"># Or clone it yourself</span>
+<span class="k">git</span> clone https://github.com/cskwork/browser-qa ~/.claude/skills/browser-qa
+<span class="k">pip3</span> install textual playwright pyyaml
+<span class="k">python3</span> -m playwright install chromium
+
+<span class="c"># Run it — web dashboard, click to execute</span>
+<span class="k">python3</span> -m superqa_tui serve
+<span class="c"># or the terminal TUI</span>
+<span class="k">bash</span> ~/.claude/skills/browser-qa/scripts/superqa.sh</pre>
     </div>
   </section>
-
+</div>
 </main>
 
-<footer>
+<footer class="rebate">
   <div class="wrap foot">
-    <div>browser-qa · MIT License</div>
-    <div><a href="https://github.com/cskwork/browser-qa">github.com/cskwork/browser-qa</a></div>
+    <span>BROWSER-QA · MIT</span>
+    <span class="perf" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+    <a href="https://github.com/cskwork/browser-qa">GITHUB.COM/CSKWORK/BROWSER-QA</a>
   </div>
 </footer>
 
+<script>
+(function(){
+  /* --- authored frames: schematic screens drawn in one stroke weight --- */
+  var S='stroke="#B9BAB2" stroke-width="1.6" fill="none"';
+  var F='fill="#D3D4CC"';
+  var steps=[
+    {ko:"진입",     en:"OPEN",     st:"pass", g:'<rect x="6" y="6" width="96" height="10" '+F+'/><rect x="6" y="24" width="60" height="6" '+F+'/><rect x="6" y="38" width="96" height="26" '+S+'/>'},
+    {ko:"로그인",   en:"LOG IN",   st:"pass", g:'<rect x="18" y="14" width="72" height="12" '+S+'/><rect x="18" y="32" width="72" height="12" '+S+'/><rect x="18" y="52" width="34" height="12" '+F+'/>'},
+    {ko:"홈",       en:"HOME",     st:"pass", g:'<rect x="6" y="6" width="96" height="8" '+F+'/><rect x="6" y="20" width="44" height="44" '+S+'/><rect x="58" y="20" width="44" height="20" '+S+'/><rect x="58" y="46" width="44" height="18" '+S+'/>'},
+    {ko:"검색",     en:"SEARCH",   st:"pass", g:'<rect x="6" y="8" width="70" height="12" '+S+'/><rect x="82" y="8" width="20" height="12" '+F+'/><rect x="6" y="28" width="96" height="7" '+F+'/><rect x="6" y="41" width="96" height="7" '+F+'/><rect x="6" y="54" width="60" height="7" '+F+'/>'},
+    {ko:"담기",     en:"ADD",      st:"pass", g:'<rect x="6" y="6" width="42" height="42" '+S+'/><rect x="56" y="8" width="46" height="7" '+F+'/><rect x="56" y="21" width="30" height="7" '+F+'/><rect x="56" y="36" width="46" height="13" '+F+'/>'},
+    {ko:"장바구니", en:"CART",     st:"fail", mark:1, g:'<rect x="6" y="6" width="96" height="16" '+S+'/><rect x="6" y="28" width="96" height="16" '+S+'/><rect x="60" y="50" width="42" height="13" '+F+'/><path d="M14 34 L22 42 M22 34 L14 42" fill="none" stroke="#E0350E" stroke-width="2.2"/>'},
+    {ko:"결제",     en:"PAY",      st:"pass", g:'<rect x="6" y="6" width="60" height="58" '+S+'/><rect x="74" y="6" width="28" height="26" '+F+'/><rect x="74" y="38" width="28" height="26" '+S+'/>'},
+    {ko:"완료",     en:"DONE",     st:"pass", g:'<rect x="6" y="6" width="96" height="34" '+S+'/><path d="M40 22 L50 31 L70 12" fill="none" stroke="#1B3A6B" stroke-width="2.6" stroke-linecap="square"/><rect x="6" y="48" width="66" height="7" '+F+'/>'}
+  ];
+  var host=document.getElementById('frames');
+  host.innerHTML=steps.map(function(s,i){
+    return '<figure class="fr" style="--i:'+i+'" data-st="'+s.st+'"'+(s.mark?' data-mark="1"':'')+'>'
+      +'<svg viewBox="0 0 108 70" role="img" aria-label="'+s.en+'">'+s.g+'</svg>'
+      +'<figcaption class="n"><span>'+String(i+1).padStart(2,'0')+'</span>'
+      +'<span class="st">'+(s.st==='fail'?'FAIL':'PASS')+'</span>'
+      +'<span class="lab" data-l="ko">'+s.ko+'</span><span class="lab" data-l="en">'+s.en+'</span>'
+      +'</figcaption></figure>';
+  }).join('');
+
+  /* --- language: follow the browser, remember the choice --- */
+  var btns=document.querySelectorAll('.lang button');
+  function set(l,save){
+    document.documentElement.lang=l;
+    btns.forEach(function(b){b.setAttribute('aria-pressed', String(b.dataset.set===l));});
+    if(save){try{localStorage.setItem('bqa-lang',l);}catch(e){}}
+  }
+  var saved=null; try{saved=localStorage.getItem('bqa-lang');}catch(e){}
+  set(saved || ((navigator.language||'en').toLowerCase().indexOf('ko')===0 ? 'ko' : 'en'), false);
+  btns.forEach(function(b){b.addEventListener('click',function(){set(b.dataset.set,true);});});
+})();
+</script>
 </body>
 </html>

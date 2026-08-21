@@ -22,8 +22,8 @@ Two layers, do not confuse them:
 
 | # | Engine | Detect | Use via |
 |---|---|---|---|
-| 1 | **ego-browser** (ego-lite) - macOS default | `command -v ego-browser` | the `ego-browser` skill if installed, else `ego-browser nodejs <<'EOF' ... EOF` heredocs |
-| 2 | **agent-browser** - cheapest loop, popups + network built in | `command -v agent-browser` | `reference/agent-browser.md` |
+| 1 | **agent-browser** - default: cheapest loop, popups and network built in, native on macOS/Linux/Windows | `command -v agent-browser` | `reference/agent-browser.md` |
+| 2 | **ego-browser** (ego-lite) - macOS only; take it when the target needs the user's own logged-in session | `command -v ego-browser` | the `ego-browser` skill if installed, else `ego-browser nodejs <<'EOF' ... EOF` heredocs |
 | 3 | Playwright MCP | playwright/browser MCP tools present in the session | its `browser_*` tools |
 | 4 | `playwright-cli` | `command -v playwright-cli` | commands in `reference/agent-qa.md` step 2 |
 | 5 | chrome-devtools-mcp - deep network only | `chrome-devtools` MCP tools present | `reference/agent-browser.md` |
@@ -45,13 +45,14 @@ Drive with agent-browser and inspect with the MCP and `list_network_requests`
 returns `No requests found`. Pick one engine per page before you start; do not
 hand a page off mid-flow.
 
-## Why ego-browser first on macOS
+## When to prefer ego-browser
 
-Isolated agent task spaces that reuse the user's login state - authenticated
-exploration without stealing the user's browser, and without re-teaching
-logins that already exist. Prefer it whenever the target needs a real
-logged-in session. For anonymous public pages any engine is equivalent;
-don't churn engines mid-task.
+It gives an isolated agent task space that reuses the user's login state - authenticated
+exploration without stealing the user's browser. Take it on macOS whenever the target
+needs a real logged-in session and you would otherwise be automating the login. It is
+macOS-only, so anything that must also run on Windows stays on agent-browser, which
+covers the same ground with the shared-Chrome flow in `reference/agent-browser.md`.
+For anonymous public pages any engine is equivalent; don't churn engines mid-task.
 
 ## Never: lightpanda
 
