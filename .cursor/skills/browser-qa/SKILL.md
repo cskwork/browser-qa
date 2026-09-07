@@ -1,6 +1,6 @@
 ---
 name: browser-qa
-description: Browser QA for any website with reviewable YAML DAG scenarios, plus the engine choice and API request/response evidence underneath it. Use when the user says QA or browser test; gives a URL to verify; names a known domain or feature to re-QA; wants a regression sweep after a feature lands; asks for a quick smoke check; wants to record a test by clicking, schedule one, or open the QA dashboard; needs QA against a local stack because the shared environment is down or the cases are destructive; needs to see which API a screen actually called and what it returned; is stuck on a popup, viewer or new-tab flow; or is choosing between agent-browser, Playwright and MCP engines.
+description: Run browser QA with reviewable YAML scenarios and real browser/API evidence. Use for URL checks, regression runs, recorded tests, scheduling, or the SuperQA dashboard.
 ---
 
 # browser-qa - browser QA on anything, for anyone
